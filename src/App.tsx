@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { CafeProvider, useCafe } from "@/contexts/CafeContext";
 
 // Auth Pages
 import LoginPage from "./pages/auth/LoginPage";
@@ -11,6 +12,9 @@ import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 import VerifyEmailPage from "./pages/auth/VerifyEmailPage";
 
+
+// Onboarding
+import OnboardingPage from "./pages/onboarding/OnboardingPage";
 
 // Dashboard Pages
 import DashboardOverview from "./pages/dashboard/DashboardOverview";
@@ -65,17 +69,20 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-/**
- * Public route wrapper
- * Redirects to dashboard if already authenticated
- */
-function PublicRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isInitialized } = useAuth();
-
-  // Show loading while checking auth state
-  if (!isInitialized) {
-    return <AuthLoading />;
+function OnboardingGate({ children }: { children: React.ReactNode }) {
+  const { cafe } = useCafe();
+  
+  // If onboarding not complete, redirect to onboarding
+  if (!cafe.onboardingComplete) {
+    return <Navigate to="/onboarding" replace />;
   }
+  
+  return <>{children}</>;
+}
+
+function AppRoutes() {
+  const { isAuthenticated } = useAuth();
+  const { cafe } = useCafe();
 
   // Redirect to dashboard if already authenticated
   if (isAuthenticated) {
@@ -91,84 +98,35 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 function AppRoutes() {
   return (
     <Routes>
-      {/* Public Auth Routes */}
-      <Route
-        path="/"
+      {/* Auth Routes */}
+      <Route 
+        path="/" 
         element={
-          <PublicRoute>
-            <LoginPage />
-          </PublicRoute>
-        }
+          isAuthenticated 
+            ? (cafe.onboardingComplete ? <Navigate to="/dashboard" replace /> : <Navigate to="/onboarding" replace />) 
+            : <LoginPage />
+        } 
       />
-      <Route
-        path="/forgot-password"
-        element={
-          <PublicRoute>
-            <ForgotPasswordPage />
-          </PublicRoute>
-        }
-      />
-      <Route
-        path="/reset-password"
-        element={
-          <PublicRoute>
-            <ResetPasswordPage />
-          </PublicRoute>
-        }
-      />
-      
-      {/* Email verification can be accessed regardless of auth state */}
-      <Route path="/verify-email" element={<VerifyEmailPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-      {/* Protected Dashboard Routes */}
-      <Route
-        path="/dashboard"
+      {/* Onboarding Route */}
+      <Route 
+        path="/onboarding" 
         element={
           <ProtectedRoute>
-            <DashboardOverview />
+            {cafe.onboardingComplete ? <Navigate to="/dashboard" replace /> : <OnboardingPage />}
           </ProtectedRoute>
-        }
+        } 
       />
-      <Route
-        path="/dashboard/bdl-insights"
-        element={
-          <ProtectedRoute>
-            <BDLInsights />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/dashboard/stamps-visits"
-        element={
-          <ProtectedRoute>
-            <StampsVisits />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/dashboard/profile"
-        element={
-          <ProtectedRoute>
-            <CafeProfile />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/dashboard/events"
-        element={
-          <ProtectedRoute>
-            <EventsPromotions />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/dashboard/qr-staff"
-        element={
-          <ProtectedRoute>
-            <QRStaffManagement />
-          </ProtectedRoute>
-        }
-      />
+
+      {/* Dashboard Routes - Allow access but show banner/locks for incomplete onboarding */}
+      <Route path="/dashboard" element={<ProtectedRoute><DashboardOverview /></ProtectedRoute>} />
+      <Route path="/dashboard/bdl-insights" element={<ProtectedRoute><BDLInsights /></ProtectedRoute>} />
+      <Route path="/dashboard/stamps-visits" element={<ProtectedRoute><StampsVisits /></ProtectedRoute>} />
+      <Route path="/dashboard/profile" element={<ProtectedRoute><CafeProfile /></ProtectedRoute>} />
+      <Route path="/dashboard/events" element={<ProtectedRoute><EventsPromotions /></ProtectedRoute>} />
+      <Route path="/dashboard/qr-staff" element={<ProtectedRoute><QRStaffManagement /></ProtectedRoute>} />
 
       {/* 404 */}
       <Route path="*" element={<NotFound />} />
@@ -183,11 +141,13 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AppRoutes />
-        </BrowserRouter>
+        <CafeProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AppRoutes />
+          </BrowserRouter>
+        </CafeProvider>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
