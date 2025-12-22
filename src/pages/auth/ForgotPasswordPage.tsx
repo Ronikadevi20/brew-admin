@@ -1,30 +1,40 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Coffee, Mail, ArrowLeft, Send } from "lucide-react";
+import { AxiosError } from "axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import type { ApiErrorResponse } from "@/types/auth.types";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const { forgotPassword, isLoading } = useAuth();
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    
-    toast({
-      title: "Email sent!",
-      description: "Check your inbox for password reset instructions.",
-    });
-    setIsSubmitted(true);
-    setIsLoading(false);
+    try {
+      await forgotPassword(email);
+      toast({
+        title: "Email sent!",
+        description: "Check your inbox for password reset instructions.",
+      });
+      setIsSubmitted(true);
+    } catch (error) {
+      const axiosError = error as AxiosError<ApiErrorResponse>;
+      const message = axiosError.response?.data?.message || "Failed to send reset email. Please try again.";
+      
+      toast({
+        title: "Error",
+        description: message,
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -71,6 +81,7 @@ export default function ForgotPasswordPage() {
                       onChange={(e) => setEmail(e.target.value)}
                       className="pl-12"
                       required
+                      disabled={isLoading}
                     />
                   </div>
                 </div>

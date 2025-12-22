@@ -10,6 +10,8 @@ import { CafeProvider, useCafe } from "@/contexts/CafeContext";
 import LoginPage from "./pages/auth/LoginPage";
 import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
+import VerifyEmailPage from "./pages/auth/VerifyEmailPage";
+
 
 // Onboarding
 import OnboardingPage from "./pages/onboarding/OnboardingPage";
@@ -24,11 +26,47 @@ import QRStaffManagement from "./pages/dashboard/QRStaffManagement";
 
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: 1,
+    },
+  },
+});
 
+/**
+ * Loading component shown during auth initialization
+ */
+function AuthLoading() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-latte">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Protected route wrapper
+ * Redirects to login if not authenticated
+ */
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuth();
-  return isAuthenticated ? <>{children}</> : <Navigate to="/" replace />;
+  const { isAuthenticated, isInitialized } = useAuth();
+
+  // Show loading while checking auth state
+  if (!isInitialized) {
+    return <AuthLoading />;
+  }
+
+  // Redirect to login if not authenticated
+  if (!isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
 }
 
 function OnboardingGate({ children }: { children: React.ReactNode }) {
@@ -46,6 +84,18 @@ function AppRoutes() {
   const { isAuthenticated } = useAuth();
   const { cafe } = useCafe();
 
+  // Redirect to dashboard if already authenticated
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <>{children}</>;
+}
+
+/**
+ * Application routes
+ */
+function AppRoutes() {
   return (
     <Routes>
       {/* Auth Routes */}
@@ -78,11 +128,15 @@ function AppRoutes() {
       <Route path="/dashboard/events" element={<ProtectedRoute><EventsPromotions /></ProtectedRoute>} />
       <Route path="/dashboard/qr-staff" element={<ProtectedRoute><QRStaffManagement /></ProtectedRoute>} />
 
+      {/* 404 */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }
 
+/**
+ * Main App Component
+ */
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
