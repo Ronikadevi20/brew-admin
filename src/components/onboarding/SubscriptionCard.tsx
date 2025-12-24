@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  Check,
   CreditCard,
   FileText,
   Shield,
@@ -133,7 +132,7 @@ export function SubscriptionCard({ onComplete, onBack, isLoading }: Subscription
               I agree to the{" "}
               <Dialog>
                 <DialogTrigger asChild>
-                  <button className="text-primary underline hover:no-underline">
+                  <button type="button" className="text-primary underline hover:no-underline">
                     Terms & Conditions
                   </button>
                 </DialogTrigger>
@@ -167,7 +166,7 @@ export function SubscriptionCard({ onComplete, onBack, isLoading }: Subscription
               {" "}and{" "}
               <Dialog>
                 <DialogTrigger asChild>
-                  <button className="text-primary underline hover:no-underline">
+                  <button type="button" className="text-primary underline hover:no-underline">
                     Privacy Policy
                   </button>
                 </DialogTrigger>
@@ -216,7 +215,7 @@ export function SubscriptionCard({ onComplete, onBack, isLoading }: Subscription
               I agree to the{" "}
               <Dialog>
                 <DialogTrigger asChild>
-                  <button className="text-primary underline hover:no-underline">
+                  <button type="button" className="text-primary underline hover:no-underline">
                     Anti-fraud & Acceptable Use
                   </button>
                 </DialogTrigger>

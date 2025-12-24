@@ -1,140 +1,243 @@
-import { useState, createContext, useContext, ReactNode, useCallback } from "react";
+/**
+ * Cafe Context
+ * 
+ * Provides cafe state and methods throughout the application.
+ * Handles cafe profile, onboarding, and draft persistence.
+ */
 
-export interface OperatingHours {
-  day: string;
-  open: string;
-  close: string;
-  isClosed: boolean;
-}
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+  type ReactNode,
+} from 'react';
+import { cafeService } from '@/services/cafe.service';
+import { useAuth } from '@/contexts/AuthContext';
+import type {
+  CafeProfile,
+  CafeContextType,
+  Cafe,
+} from '@/types/cafe.types';
+import { defaultCafeProfile } from '@/types/cafe.types';
 
-export interface CafeProfile {
-  id: string;
-  name: string;
-  logo: string | null;
-  description: string;
-  address: string;
-  area: string;
-  phone: string;
-  email: string;
-  instagram: string;
-  website: string;
-  operatingHours: OperatingHours[];
-  verificationMethod: "pin" | "qr_only";
-  staffPin: string;
-  subscriptionStatus: "none" | "pending" | "active" | "cancelled";
-  onboardingComplete: boolean;
-  onboardingStep: number;
-  termsAccepted: boolean;
-  antifraudAccepted: boolean;
-}
+// Storage key for draft persistence
+const CAFE_DRAFT_KEY = 'cafe_profile_draft';
 
-const defaultOperatingHours: OperatingHours[] = [
-  { day: "Monday", open: "08:00", close: "22:00", isClosed: false },
-  { day: "Tuesday", open: "08:00", close: "22:00", isClosed: false },
-  { day: "Wednesday", open: "08:00", close: "22:00", isClosed: false },
-  { day: "Thursday", open: "08:00", close: "22:00", isClosed: false },
-  { day: "Friday", open: "08:00", close: "23:00", isClosed: false },
-  { day: "Saturday", open: "09:00", close: "23:00", isClosed: false },
-  { day: "Sunday", open: "09:00", close: "21:00", isClosed: false },
-];
-
-const defaultCafeProfile: CafeProfile = {
-  id: "",
-  name: "",
-  logo: null,
-  description: "",
-  address: "",
-  area: "",
-  phone: "",
-  email: "",
-  instagram: "",
-  website: "",
-  operatingHours: defaultOperatingHours,
-  verificationMethod: "pin",
-  staffPin: "",
-  subscriptionStatus: "none",
-  onboardingComplete: false,
-  onboardingStep: 1,
-  termsAccepted: false,
-  antifraudAccepted: false,
-};
-
-interface CafeContextType {
-  cafe: CafeProfile;
-  updateCafe: (updates: Partial<CafeProfile>) => void;
-  saveDraft: () => Promise<boolean>;
-  completeOnboarding: () => Promise<boolean>;
-  isLoading: boolean;
-}
-
+// Create context
 const CafeContext = createContext<CafeContextType | undefined>(undefined);
 
-export function CafeProvider({ children }: { children: ReactNode }) {
-  const [cafe, setCafe] = useState<CafeProfile>(() => {
-    // Load from localStorage for persistence
-    const saved = localStorage.getItem("cafe_profile");
-    if (saved) {
-      try {
-        return { ...defaultCafeProfile, ...JSON.parse(saved) };
-      } catch {
-        return defaultCafeProfile;
-      }
-    }
-    return defaultCafeProfile;
-  });
-  const [isLoading, setIsLoading] = useState(false);
+interface CafeProviderProps {
+  children: ReactNode;
+}
 
+/**
+ * Load draft from sessionStorage (more secure than localStorage)
+ */
+function loadDraft(): CafeProfile | null {
+  try {
+    const saved = sessionStorage.getItem(CAFE_DRAFT_KEY);
+    if (saved) {
+      return { ...defaultCafeProfile, ...JSON.parse(saved) };
+    }
+  } catch {
+    console.warn('Failed to load cafe draft');
+  }
+  return null;
+}
+
+/**
+ * Save draft to sessionStorage
+ */
+function saveDraftToStorage(profile: CafeProfile): void {
+  try {
+    sessionStorage.setItem(CAFE_DRAFT_KEY, JSON.stringify(profile));
+  } catch {
+    console.warn('Failed to save cafe draft');
+  }
+}
+
+/**
+ * Clear draft from storage
+ */
+function clearDraftFromStorage(): void {
+  try {
+    sessionStorage.removeItem(CAFE_DRAFT_KEY);
+  } catch {
+    console.warn('Failed to clear cafe draft');
+  }
+}
+
+export function CafeProvider({ children }: CafeProviderProps) {
+  const { user, refreshAuth } = useAuth();
+  
+  // Initialize cafe profile from draft or defaults
+  const [cafe, setCafe] = useState<CafeProfile>(() => {
+    return loadDraft() || defaultCafeProfile;
+  });
+  
+  const [myCafe, setMyCafe] = useState<Cafe | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  /**
+   * Update cafe profile and persist draft
+   */
   const updateCafe = useCallback((updates: Partial<CafeProfile>) => {
     setCafe((prev) => {
       const updated = { ...prev, ...updates };
-      localStorage.setItem("cafe_profile", JSON.stringify(updated));
+      saveDraftToStorage(updated);
       return updated;
     });
   }, []);
 
+  /**
+   * Save draft (explicit action)
+   */
   const saveDraft = useCallback(async (): Promise<boolean> => {
-    setIsLoading(true);
     try {
-      // Simulate API call - in production, this would be PATCH /api/cafes/me
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      localStorage.setItem("cafe_profile", JSON.stringify(cafe));
+      saveDraftToStorage(cafe);
       return true;
     } catch {
       return false;
-    } finally {
-      setIsLoading(false);
     }
   }, [cafe]);
 
+  /**
+   * Create cafe via API (completes onboarding)
+   */
+  const createCafe = useCallback(async (): Promise<boolean> => {
+    setIsLoading(true);
+    
+    try {
+      const createdCafe = await cafeService.create(cafe);
+      
+      setMyCafe(createdCafe);
+      
+      // Update local state
+      setCafe((prev) => ({
+        ...prev,
+        id: createdCafe.id,
+        onboardingComplete: true,
+      }));
+      
+      // Clear draft after successful creation
+      clearDraftFromStorage();
+      
+      // Refresh auth to update hasCompletedOnboarding
+      await refreshAuth();
+      
+      return true;
+    } catch (error: any) {
+      console.error('Failed to create cafe:', error);
+      
+      // Log detailed error for debugging
+      if (error.response?.data) {
+        console.error('Server error details:', error.response.data);
+      }
+      
+      // Re-throw the error so the UI can handle it
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [cafe, refreshAuth]);
+
+  /**
+   * Load user's cafe from API
+   */
+  const loadMyCafe = useCallback(async (): Promise<void> => {
+    if (!user || !user.hasCompletedOnboarding) {
+      setIsInitialized(true);
+      return;
+    }
+
+    setIsLoading(true);
+    
+    try {
+      // Note: You may need to add an endpoint to get the user's own cafe
+      // For now, we assume the cafe ID is stored somewhere or fetched separately
+      // This is a placeholder - adjust based on your API
+      setIsInitialized(true);
+    } catch (error) {
+      console.error('Failed to load cafe:', error);
+    } finally {
+      setIsLoading(false);
+      setIsInitialized(true);
+    }
+  }, [user]);
+
+  /**
+   * Complete onboarding (wrapper around createCafe)
+   */
   const completeOnboarding = useCallback(async (): Promise<boolean> => {
-    setIsLoading(true);
-    try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      const updated = { ...cafe, onboardingComplete: true };
-      setCafe(updated);
-      localStorage.setItem("cafe_profile", JSON.stringify(updated));
-      return true;
-    } catch {
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [cafe]);
+    return createCafe();
+  }, [createCafe]);
 
-  return (
-    <CafeContext.Provider
-      value={{ cafe, updateCafe, saveDraft, completeOnboarding, isLoading }}
-    >
-      {children}
-    </CafeContext.Provider>
+  /**
+   * Reset cafe to defaults
+   */
+  const resetCafe = useCallback(() => {
+    setCafe(defaultCafeProfile);
+    setMyCafe(null);
+    clearDraftFromStorage();
+  }, []);
+
+  /**
+   * Initialize on mount and when user changes
+   */
+  useEffect(() => {
+    if (user) {
+      loadMyCafe();
+    } else {
+      setIsInitialized(true);
+    }
+  }, [user, loadMyCafe]);
+
+  // Memoize context value
+  const value = useMemo<CafeContextType>(
+    () => ({
+      cafe,
+      myCafe,
+      isLoading,
+      isInitialized,
+      updateCafe,
+      saveDraft,
+      createCafe,
+      loadMyCafe,
+      completeOnboarding,
+      resetCafe,
+    }),
+    [
+      cafe,
+      myCafe,
+      isLoading,
+      isInitialized,
+      updateCafe,
+      saveDraft,
+      createCafe,
+      loadMyCafe,
+      completeOnboarding,
+      resetCafe,
+    ]
   );
+
+  return <CafeContext.Provider value={value}>{children}</CafeContext.Provider>;
 }
 
-export function useCafe() {
+/**
+ * Hook to access cafe context
+ */
+export function useCafe(): CafeContextType {
   const context = useContext(CafeContext);
+  
   if (context === undefined) {
-    throw new Error("useCafe must be used within a CafeProvider");
+    throw new Error('useCafe must be used within a CafeProvider');
   }
+  
   return context;
 }
+
+export default CafeContext;

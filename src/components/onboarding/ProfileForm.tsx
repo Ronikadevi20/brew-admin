@@ -44,9 +44,16 @@ export function ProfileForm({ onNext, onSaveDraft, isLoading }: ProfileFormProps
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Check file size (max 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        setErrors((prev) => ({ ...prev, logo: "File size must be less than 2MB" }));
+        return;
+      }
+      
       const reader = new FileReader();
       reader.onloadend = () => {
         updateCafe({ logo: reader.result as string });
+        setErrors((prev) => ({ ...prev, logo: "" }));
       };
       reader.readAsDataURL(file);
     }

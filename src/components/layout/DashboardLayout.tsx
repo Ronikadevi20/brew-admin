@@ -79,7 +79,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* Top Bar */}
         <header className="h-16 bg-card border-b border-border flex items-center justify-between px-6 sticky top-0 z-40">
           <div>
-            <h2 className="font-serif text-lg font-semibold text-foreground">{user?.cafeName || "Café Dashboard"}</h2>
+            <h2 className="font-serif text-lg font-semibold text-foreground">{"Café Yangu"}</h2>
+            {/* <h2 className="font-serif text-lg font-semibold text-foreground">{user?.cafeName || "Café Dashboard"}</h2> */}
           </div>
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" className="relative">

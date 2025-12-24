@@ -1,4 +1,3 @@
-import { OperatingHours } from "@/contexts/CafeContext";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import {
@@ -8,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import type { OperatingHours } from "@/types/cafe.types";
 
 interface HoursEditorProps {
   hours: OperatingHours[];

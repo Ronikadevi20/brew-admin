@@ -25,11 +25,10 @@ export default function LoginPage() {
         title: "Welcome back!",
         description: "You have successfully signed in.",
       });
-      navigate("/dashboard");
     } catch (error) {
       const axiosError = error as AxiosError<ApiErrorResponse>;
       const message = axiosError.response?.data?.message || "Invalid credentials. Please try again.";
-      
+
       toast({
         title: "Error",
         description: message,
@@ -51,7 +50,7 @@ export default function LoginPage() {
             <rect width="100" height="100" fill="url(#coffee-beans)" />
           </svg>
         </div>
-        
+
         <div className="relative z-10 flex flex-col justify-center items-center w-full p-12 text-primary-foreground">
           <div className="w-20 h-20 bg-caramel rounded-2xl flex items-center justify-center mb-8 shadow-glow animate-fade-in">
             <Coffee className="w-10 h-10" />
@@ -62,7 +61,7 @@ export default function LoginPage() {
           <p className="text-lg text-primary-foreground/80 text-center max-w-md animate-fade-in stagger-2 opacity-0">
             Manage your café, track customer engagement, and grow your coffee community.
           </p>
-          
+
           {/* Floating elements */}
           <div className="absolute top-20 left-20 w-32 h-32 bg-caramel/20 rounded-full blur-3xl animate-pulse" />
           <div className="absolute bottom-40 right-20 w-48 h-48 bg-latte/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
@@ -156,6 +155,18 @@ export default function LoginPage() {
                 )}
               </Button>
             </form>
+
+            <div className="mt-6 text-center border-t border-border pt-6">
+              <p className="text-sm text-muted-foreground">
+                Don't have an account?{" "}
+                <Link
+                  to="/register"
+                  className="text-accent hover:text-accent/80 font-medium transition-colors"
+                >
+                  Register your café
+                </Link>
+              </p>
+            </div>
           </div>
 
           <p className="text-center text-sm text-muted-foreground mt-8">
