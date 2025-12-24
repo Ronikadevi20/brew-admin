@@ -9,8 +9,9 @@ export interface User {
   id: string;
   username: string;
   email: string;
-  role: string;
-  membershipType: string;
+  role: 'USER' | 'CAFE_ADMIN' | 'ADMIN';
+  membershipType: 'FREE' | 'PREMIUM';
+  hasCompletedOnboarding: boolean;
   profileImageUrl?: string | null;
   isActive?: boolean;
   isEmailVerified?: boolean;

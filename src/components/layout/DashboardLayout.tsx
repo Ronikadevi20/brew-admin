@@ -1,6 +1,7 @@
 import { Coffee, LayoutDashboard, TrendingUp, Stamp, Store, Calendar, QrCode, LogOut, Bell, ChevronDown } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCafe } from "@/contexts/CafeContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,6 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { OnboardingBanner } from "@/components/dashboard/OnboardingBanner";
 
 const navItems = [
   { title: "Dashboard Overview", path: "/dashboard", icon: LayoutDashboard },
@@ -25,6 +27,7 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user, logout } = useAuth();
+  const { cafe } = useCafe();
 
   return (
     <div className="min-h-screen flex w-full bg-background">
@@ -76,7 +79,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* Top Bar */}
         <header className="h-16 bg-card border-b border-border flex items-center justify-between px-6 sticky top-0 z-40">
           <div>
-            <h2 className="font-serif text-lg font-semibold text-foreground">{user?.cafeName || "Café Dashboard"}</h2>
+            <h2 className="font-serif text-lg font-semibold text-foreground">{"Café Yangu"}</h2>
+            {/* <h2 className="font-serif text-lg font-semibold text-foreground">{user?.cafeName || "Café Dashboard"}</h2> */}
           </div>
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" className="relative">
@@ -106,6 +110,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
         {/* Page Content */}
         <main className="p-6">
+          {!cafe.onboardingComplete && <OnboardingBanner />}
           {children}
         </main>
 
