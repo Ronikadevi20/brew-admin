@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Coffee, Mail, Lock, User, ArrowRight, ArrowLeft } from "lucide-react";
 import { AxiosError } from "axios";
@@ -17,9 +17,21 @@ export default function RegisterPage() {
     confirmPassword: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const { register, isLoading } = useAuth();
+  const { register, isLoading, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Handle navigation after registration state changes
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      // New users go to onboarding
+      if (!user.hasCompletedOnboarding) {
+        navigate('/onboarding', { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
+    }
+  }, [isAuthenticated, user, navigate]);
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -63,8 +75,7 @@ export default function RegisterPage() {
         title: "Account created!",
         description: "Let's set up your café profile.",
       });
-      // After registration, user will be redirected to onboarding via App.tsx routing
-      navigate("/onboarding");
+      // Navigation is handled by the useEffect above after state updates
     } catch (error) {
       const axiosError = error as AxiosError<ApiErrorResponse>;
       const message = axiosError.response?.data?.message || "Registration failed. Please try again.";
@@ -109,6 +120,21 @@ export default function RegisterPage() {
           <p className="text-lg text-primary-foreground/80 text-center max-w-md animate-fade-in stagger-2 opacity-0">
             Register your café and start building your loyal customer community today.
           </p>
+
+          {/* Benefits list */}
+          <div className="mt-8 space-y-3 animate-fade-in stagger-3 opacity-0">
+            {[
+              "Digital loyalty stamps",
+              "Customer insights & analytics",
+              "Event & promotion tools",
+              "QR code verification",
+            ].map((benefit) => (
+              <div key={benefit} className="flex items-center gap-3 text-primary-foreground/90">
+                <div className="w-2 h-2 rounded-full bg-caramel" />
+                <span>{benefit}</span>
+              </div>
+            ))}
+          </div>
 
           {/* Floating elements */}
           <div className="absolute top-20 left-20 w-32 h-32 bg-caramel/20 rounded-full blur-3xl animate-pulse" />

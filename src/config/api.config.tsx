@@ -6,7 +6,7 @@
  */
 
 // API Base URL - defaults to localhost for development
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
 // API Version
 export const API_VERSION = 'v1';
@@ -33,8 +33,34 @@ export const API_ENDPOINTS = {
     SEARCH: '/cafes/search',
     NEARBY: '/cafes/nearby',
     BY_CITY: '/cafes/city',
+    MY_CAFE: '/cafes/my-cafe',
     BY_ID: (id: string) => `/cafes/${id}`,
     STATS: (id: string) => `/cafes/${id}/stats`,
+  },
+  ANALYTICS: {
+    OVERVIEW: '/analytics/overview',
+    USER_GROWTH: '/analytics/user-growth',
+    CAFE_PERFORMANCE: '/analytics/cafe-performance',
+    POPULAR_TIMES: '/analytics/popular-times',
+    ENGAGEMENT: '/analytics/engagement',
+    RETENTION: '/analytics/retention',
+    REVENUE: '/analytics/revenue',
+    CAFE: (cafeId: string) => `/analytics/cafe/${cafeId}`,
+    DASHBOARD: {
+      METRICS: (cafeId: string) => `/analytics/dashboard/${cafeId}/metrics`,
+      VISITS_CHART: (cafeId: string) => `/analytics/dashboard/${cafeId}/visits-chart`,
+      STAMPS_CHART: (cafeId: string) => `/analytics/dashboard/${cafeId}/stamps-chart`,
+      BDL_VISIBILITY: (cafeId: string) => `/analytics/dashboard/${cafeId}/bdl-visibility`,
+      PEAK_HOURS: (cafeId: string) => `/analytics/dashboard/${cafeId}/peak-hours`,
+    },
+  },
+  NOTIFICATIONS: {
+    BASE: '/notifications',
+    STATS: '/notifications/stats',
+    READ_ALL: '/notifications/read-all',
+    BY_ID: (id: string) => `/notifications/${id}`,
+    MARK_READ: (id: string) => `/notifications/${id}/read`,
+    BULK: '/notifications/bulk',
   },
 } as const;
 
