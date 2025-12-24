@@ -1,3 +1,9 @@
+/**
+ * Analytics Service
+ * 
+ * Handles all analytics-related API calls.
+ */
+
 import apiClient from '@/lib/api-client';
 import { API_ENDPOINTS } from '@/config/api.config';
 import type {
@@ -18,6 +24,10 @@ import type {
   RetentionMetrics,
   RevenueInsights,
   CafeAnalytics,
+  BDLTimelineData,
+  BDLEngagementData,
+  BDLPeakTimesData,
+  DrinkPopularityData,
 } from '@/types/analytics.types';
 
 /**
@@ -196,6 +206,65 @@ export const analyticsService = {
     const response = await apiClient.get<{ success: boolean; data: CafeAnalytics }>(
       API_ENDPOINTS.ANALYTICS.CAFE(cafeId),
       { params: { timeframe } }
+    );
+    return response.data.data;
+  },
+
+  // ==================== BDL Analytics ====================
+
+  /**
+   * Get BDL timeline data (daily breakdown by privacy level)
+   */
+  getBDLTimeline: async (
+    cafeId: string,
+    period: DashboardPeriod = 'week'
+  ): Promise<BDLTimelineData[]> => {
+    const response = await apiClient.get<{ success: boolean; data: BDLTimelineData[] }>(
+      API_ENDPOINTS.ANALYTICS.DASHBOARD.BDL_TIMELINE(cafeId),
+      { params: { period } }
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Get BDL engagement data (posts after stamps, repeat posters)
+   */
+  getBDLEngagement: async (
+    cafeId: string,
+    period: DashboardPeriod = 'week'
+  ): Promise<BDLEngagementData[]> => {
+    const response = await apiClient.get<{ success: boolean; data: BDLEngagementData[] }>(
+      API_ENDPOINTS.ANALYTICS.DASHBOARD.BDL_ENGAGEMENT(cafeId),
+      { params: { period } }
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Get BDL peak times data
+   */
+  getBDLPeakTimes: async (
+    cafeId: string,
+    period: DashboardPeriod = 'week'
+  ): Promise<BDLPeakTimesData> => {
+    const response = await apiClient.get<{ success: boolean; data: BDLPeakTimesData }>(
+      API_ENDPOINTS.ANALYTICS.DASHBOARD.BDL_PEAK_TIMES(cafeId),
+      { params: { period } }
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Get most photographed drinks
+   */
+  getMostPhotographedDrinks: async (
+    cafeId: string,
+    period: DashboardPeriod = 'week',
+    limit: number = 10
+  ): Promise<DrinkPopularityData[]> => {
+    const response = await apiClient.get<{ success: boolean; data: DrinkPopularityData[] }>(
+      API_ENDPOINTS.ANALYTICS.DASHBOARD.MOST_PHOTOGRAPHED_DRINKS(cafeId),
+      { params: { period, limit } }
     );
     return response.data.data;
   },

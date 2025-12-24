@@ -160,3 +160,36 @@ export interface PeakHoursResponse {
   data: PeakHoursHeatmapData;
   timestamp: string;
 }
+
+// ==================== BDL Analytics Types ====================
+
+// BDL timeline data (daily breakdown by privacy level)
+export interface BDLTimelineData {
+  date: string;
+  posts: number;
+  public: number;
+  friends: number;
+  private: number;
+}
+
+// BDL engagement data
+export interface BDLEngagementData {
+  day: string;
+  postsAfterStamp: number;
+  repeatPosters: number;
+}
+
+// BDL peak times data
+export interface BDLPeakTimesData {
+  peakTime: string;
+  peakDays: string[];
+  weekdayAvg: number;
+  weekendAvg: number;
+}
+
+// Drink popularity data
+export interface DrinkPopularityData {
+  drinkName: string;
+  count: number;
+  percentage: number;
+}

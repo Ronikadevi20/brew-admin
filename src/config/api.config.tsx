@@ -6,7 +6,7 @@
  */
 
 // API Base URL - defaults to localhost for development
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
 // API Version
 export const API_VERSION = 'v1';
@@ -52,6 +52,10 @@ export const API_ENDPOINTS = {
       STAMPS_CHART: (cafeId: string) => `/analytics/dashboard/${cafeId}/stamps-chart`,
       BDL_VISIBILITY: (cafeId: string) => `/analytics/dashboard/${cafeId}/bdl-visibility`,
       PEAK_HOURS: (cafeId: string) => `/analytics/dashboard/${cafeId}/peak-hours`,
+      BDL_TIMELINE: (cafeId: string) => `/analytics/dashboard/${cafeId}/bdl-timeline`,
+      BDL_ENGAGEMENT: (cafeId: string) => `/analytics/dashboard/${cafeId}/bdl-engagement`,
+      BDL_PEAK_TIMES: (cafeId: string) => `/analytics/dashboard/${cafeId}/bdl-peak-times`,
+      MOST_PHOTOGRAPHED_DRINKS: (cafeId: string) => `/analytics/dashboard/${cafeId}/most-photographed-drinks`,
     },
   },
   NOTIFICATIONS: {
