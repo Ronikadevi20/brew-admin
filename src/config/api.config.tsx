@@ -70,6 +70,22 @@ export const API_ENDPOINTS = {
     MARK_READ: (id: string) => `/notifications/${id}/read`,
     BULK: '/notifications/bulk',
   },
+  EVENTS: {
+    BASE: '/events',
+    UPCOMING: '/events/upcoming',
+    BY_CAFE: (cafeId: string) => `/events/cafe/${cafeId}`,
+    BY_ID: (id: string) => `/events/${id}`,
+    REGISTER: (id: string) => `/events/${id}/register`,
+    UNREGISTER: (id: string) => `/events/${id}/unregister`,
+  },
+  OFFERS: {
+    BASE: '/offers',
+    ACTIVE: '/offers/active',
+    BY_CAFE: (cafeId: string) => `/offers/cafe/${cafeId}`,
+    BY_ID: (id: string) => `/offers/${id}`,
+    BY_CODE: (code: string) => `/offers/code/${code}`,
+    REDEEM: (idOrCode: string) => `/offers/${idOrCode}/redeem`,
+  },
 } as const;
 
 // Token storage keys - using constants to avoid typos
