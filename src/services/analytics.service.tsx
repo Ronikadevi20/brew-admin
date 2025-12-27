@@ -28,6 +28,10 @@ import type {
   BDLEngagementData,
   BDLPeakTimesData,
   DrinkPopularityData,
+  StampCardFunnelData,
+  CustomerTypeData,
+  DailyStatistics,
+  StampsByDrinkData,
 } from '@/types/analytics.types';
 
 /**
@@ -264,6 +268,66 @@ export const analyticsService = {
   ): Promise<DrinkPopularityData[]> => {
     const response = await apiClient.get<{ success: boolean; data: DrinkPopularityData[] }>(
       API_ENDPOINTS.ANALYTICS.DASHBOARD.MOST_PHOTOGRAPHED_DRINKS(cafeId),
+      { params: { period, limit } }
+    );
+    return response.data.data;
+  },
+
+  // ==================== Stamps & Visits Analytics ====================
+
+  /**
+   * Get stamp card completion funnel
+   */
+  getStampCardFunnel: async (
+    cafeId: string,
+    period: DashboardPeriod = 'week'
+  ): Promise<StampCardFunnelData[]> => {
+    const response = await apiClient.get<{ success: boolean; data: StampCardFunnelData[] }>(
+      API_ENDPOINTS.ANALYTICS.DASHBOARD.STAMP_CARD_FUNNEL(cafeId),
+      { params: { period } }
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Get customer type breakdown (returning vs new)
+   */
+  getCustomerTypeBreakdown: async (
+    cafeId: string,
+    period: DashboardPeriod = 'week'
+  ): Promise<CustomerTypeData> => {
+    const response = await apiClient.get<{ success: boolean; data: CustomerTypeData }>(
+      API_ENDPOINTS.ANALYTICS.DASHBOARD.CUSTOMER_TYPE(cafeId),
+      { params: { period } }
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Get daily statistics
+   */
+  getDailyStatistics: async (
+    cafeId: string,
+    period: DashboardPeriod = 'week',
+    limit: number = 7
+  ): Promise<DailyStatistics[]> => {
+    const response = await apiClient.get<{ success: boolean; data: DailyStatistics[] }>(
+      API_ENDPOINTS.ANALYTICS.DASHBOARD.DAILY_STATISTICS(cafeId),
+      { params: { period, limit } }
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Get stamps by drink type
+   */
+  getStampsByDrink: async (
+    cafeId: string,
+    period: DashboardPeriod = 'week',
+    limit: number = 5
+  ): Promise<StampsByDrinkData[]> => {
+    const response = await apiClient.get<{ success: boolean; data: StampsByDrinkData[] }>(
+      API_ENDPOINTS.ANALYTICS.DASHBOARD.STAMPS_BY_DRINK(cafeId),
       { params: { period, limit } }
     );
     return response.data.data;

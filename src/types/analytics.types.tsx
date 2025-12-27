@@ -22,12 +22,17 @@ export interface DashboardMetrics {
   newUsers: number;
   peakHour: string;
   avgFrequency: number;
+  redemptions: number;
+  avgStampsPerUser: number;
+  uniqueVisitors: number;
   changes: {
     visits: number;
     stamps: number;
     bdlPosts: number;
     newUsers: number;
     avgFrequency: number;
+    redemptions: number;
+    avgStampsPerUser: number;
   };
 }
 
@@ -191,5 +196,39 @@ export interface BDLPeakTimesData {
 export interface DrinkPopularityData {
   drinkName: string;
   count: number;
+  percentage: number;
+}
+
+// ==================== Stamps & Visits Analytics Types ====================
+
+// Stamp card funnel data
+export interface StampCardFunnelData {
+  stage: string;
+  users: number;
+  percentage: number;
+}
+
+// Customer type breakdown
+export interface CustomerTypeData {
+  returning: number;
+  new: number;
+  returningPercentage: number;
+  newPercentage: number;
+}
+
+// Daily statistics
+export interface DailyStatistics {
+  date: string;
+  visits: number;
+  stamps: number;
+  redemptions: number;
+  uniqueUsers: number;
+  peakHour: string;
+}
+
+// Stamps by drink type
+export interface StampsByDrinkData {
+  name: string;
+  value: number;
   percentage: number;
 }

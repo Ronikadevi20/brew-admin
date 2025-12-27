@@ -56,6 +56,10 @@ export const API_ENDPOINTS = {
       BDL_ENGAGEMENT: (cafeId: string) => `/analytics/dashboard/${cafeId}/bdl-engagement`,
       BDL_PEAK_TIMES: (cafeId: string) => `/analytics/dashboard/${cafeId}/bdl-peak-times`,
       MOST_PHOTOGRAPHED_DRINKS: (cafeId: string) => `/analytics/dashboard/${cafeId}/most-photographed-drinks`,
+      STAMP_CARD_FUNNEL: (cafeId: string) => `/analytics/dashboard/${cafeId}/stamp-card-funnel`,
+      CUSTOMER_TYPE: (cafeId: string) => `/analytics/dashboard/${cafeId}/customer-type`,
+      DAILY_STATISTICS: (cafeId: string) => `/analytics/dashboard/${cafeId}/daily-statistics`,
+      STAMPS_BY_DRINK: (cafeId: string) => `/analytics/dashboard/${cafeId}/stamps-by-drink`,
     },
   },
   NOTIFICATIONS: {

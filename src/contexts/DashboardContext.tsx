@@ -32,12 +32,17 @@ const defaultMetrics: DashboardMetrics = {
   newUsers: 0,
   peakHour: "N/A",
   avgFrequency: 0,
+  redemptions: 0,
+  avgStampsPerUser: 0,
+  uniqueVisitors: 0,
   changes: {
     visits: 0,
     stamps: 0,
     bdlPosts: 0,
     newUsers: 0,
     avgFrequency: 0,
+    redemptions: 0,
+    avgStampsPerUser: 0,
   },
 };
 
