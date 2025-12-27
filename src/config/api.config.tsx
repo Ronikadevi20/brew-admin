@@ -86,6 +86,16 @@ export const API_ENDPOINTS = {
     BY_CODE: (code: string) => `/offers/code/${code}`,
     REDEEM: (idOrCode: string) => `/offers/${idOrCode}/redeem`,
   },
+  CAFE_ADMIN: {
+    MY_CAFES: '/cafe-admin/my-cafes',
+    DASHBOARD: (cafeId: string) => `/cafe-admin/dashboard/${cafeId}`,
+    UPDATE_PIN: '/cafe-admin/pin/update',
+    RECENT_VISITORS: (cafeId: string) => `/cafe-admin/${cafeId}/recent-visitors`,
+    VISITOR_ACTIVITY: (cafeId: string) => `/cafe-admin/${cafeId}/visitor-activity`,
+    REVIEWS: (cafeId: string) => `/cafe-admin/${cafeId}/reviews`,
+    PEAK_HOURS: (cafeId: string) => `/cafe-admin/${cafeId}/peak-hours`,
+    PIN_ACTIVITY_TODAY: (cafeId: string) => `/cafe-admin/${cafeId}/pin-activity/today`,
+  },
 } as const;
 
 // Token storage keys - using constants to avoid typos
