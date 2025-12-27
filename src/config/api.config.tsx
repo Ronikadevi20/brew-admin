@@ -80,3 +80,24 @@ export const TOKEN_KEYS = {
 
 // Request timeout in milliseconds
 export const REQUEST_TIMEOUT = 30000;
+
+/**
+ * Get full URL for uploaded files (images, etc.)
+ * Handles both relative paths from backend and full URLs
+ */
+export const getUploadUrl = (path: string | null | undefined): string | null => {
+  if (!path) return null;
+  
+  // If it's already a full URL (http/https) or a data URL (base64), return as is
+  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) {
+    return path;
+  }
+  
+  // If it starts with /uploads, prepend the base URL
+  if (path.startsWith('/uploads')) {
+    return `${API_BASE_URL}${path}`;
+  }
+  
+  // If it's just a filename or relative path, assume it's in uploads
+  return `${API_BASE_URL}/uploads/${path}`;
+};
