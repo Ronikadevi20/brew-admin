@@ -1,9 +1,3 @@
-/**
- * Cafe Service
- * 
- * Handles all cafe-related API calls.
- */
-
 import apiClient from '@/lib/api-client';
 import { API_ENDPOINTS } from '@/config/api.config';
 import type {
@@ -164,6 +158,16 @@ export const cafeService = {
       { params: { page, limit } }
     );
     return response.data;
+  },
+
+  /**
+   * Get the current cafe admin's cafe
+   */
+  getMyCafe: async (): Promise<Cafe> => {
+    const response = await apiClient.get<GetCafeResponse>(
+      API_ENDPOINTS.CAFES.MY_CAFE
+    );
+    return response.data.data;
   },
 };
 

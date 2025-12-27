@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { CafeProvider } from "@/contexts/CafeContext";
+import { DashboardProvider } from "@/contexts/DashboardContext";
 
 // Auth Pages
 import LoginPage from "./pages/auth/LoginPage";
@@ -56,10 +57,12 @@ function AuthLoading() {
  */
 function ProtectedRoute({ 
   children, 
-  requireOnboarding = true 
+  requireOnboarding = true,
+  withDashboardProvider = false,
 }: { 
   children: React.ReactNode;
   requireOnboarding?: boolean;
+  withDashboardProvider?: boolean;
 }) {
   const { isAuthenticated, isInitialized, user } = useAuth();
 
@@ -76,6 +79,11 @@ function ProtectedRoute({
   // For cafe admins, redirect to onboarding if not completed
   if (requireOnboarding && user?.role === 'CAFE_ADMIN' && !user?.hasCompletedOnboarding) {
     return <Navigate to="/onboarding" replace />;
+  }
+
+  // Wrap with DashboardProvider if needed
+  if (withDashboardProvider) {
+    return <DashboardProvider>{children}</DashboardProvider>;
   }
 
   return <>{children}</>;
@@ -185,7 +193,7 @@ function AppRoutes() {
       <Route
         path="/dashboard"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute withDashboardProvider>
             <DashboardOverview />
           </ProtectedRoute>
         }
@@ -193,7 +201,7 @@ function AppRoutes() {
       <Route
         path="/dashboard/bdl-insights"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute withDashboardProvider>
             <BDLInsights />
           </ProtectedRoute>
         }
@@ -201,7 +209,7 @@ function AppRoutes() {
       <Route
         path="/dashboard/stamps-visits"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute withDashboardProvider>
             <StampsVisits />
           </ProtectedRoute>
         }

@@ -37,6 +37,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   /**
+   * Fetch current user from /auth/me endpoint
+   * This gives us the real-time hasCompletedOnboarding status
+   */
+  const fetchCurrentUser = useCallback(async () => {
+    try {
+      const user = await authService.getCurrentUser();
+      console.log('Fetched current user:', user);
+      return user;
+    } catch (error) {
+      console.error('Failed to fetch current user:', error);
+      throw error;
+    }
+  }, []);
+
+  /**
    * Initialize auth state on mount
    * Checks for existing session and restores it
    */
@@ -51,8 +66,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       try {
         updateState({ isLoading: true });
         
-        // Try to get current user with stored refresh token
-        const user = await authService.getCurrentUser();
+        // Fetch current user to get real-time data including hasCompletedOnboarding
+        const user = await fetchCurrentUser();
         
         updateState({
           user,
@@ -74,7 +89,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     };
 
     initializeAuth();
-  }, [updateState]);
+  }, [updateState, fetchCurrentUser]);
 
   /**
    * Login with email and password
@@ -83,10 +98,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
     updateState({ isLoading: true });
 
     try {
-      const { user } = await authService.login({ email, password });
+      // First, perform login to get tokens
+      await authService.login({ email, password });
+      
+      // Then fetch current user to get real-time hasCompletedOnboarding status
+      // This is crucial because the login response might have stale data
+      const currentUser = await fetchCurrentUser();
+      console.log('User after login with real-time data:', currentUser);
       
       updateState({
-        user,
+        user: currentUser,
         isAuthenticated: true,
         isLoading: false,
       });
@@ -94,7 +115,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       updateState({ isLoading: false });
       throw error;
     }
-  }, [updateState]);
+  }, [updateState, fetchCurrentUser]);
 
   /**
    * Register new user
@@ -103,10 +124,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
     updateState({ isLoading: true });
 
     try {
-      const { user } = await authService.register(data);
+      // First, perform registration
+      await authService.register(data);
+      
+      // Then fetch current user to get real-time data
+      const currentUser = await fetchCurrentUser();
+      console.log('User after register:', currentUser);
       
       updateState({
-        user,
+        user: currentUser,
         isAuthenticated: true,
         isLoading: false,
       });
@@ -114,7 +140,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       updateState({ isLoading: false });
       throw error;
     }
-  }, [updateState]);
+  }, [updateState, fetchCurrentUser]);
 
   /**
    * Logout user
@@ -172,7 +198,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   );
 
   /**
-   * Refresh auth state
+   * Refresh auth state - fetches current user from API
    */
   const refreshAuth = useCallback(async () => {
     if (!authService.hasSession()) {
@@ -180,14 +206,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     try {
-      const user = await authService.getCurrentUser();
+      const user = await fetchCurrentUser();
       updateState({ user, isAuthenticated: true });
     } catch (error) {
       console.warn('Auth refresh failed:', error);
       tokenStorage.clearAllTokens();
       updateState({ user: null, isAuthenticated: false });
     }
-  }, [updateState]);
+  }, [updateState, fetchCurrentUser]);
 
   // Memoize context value to prevent unnecessary re-renders
   const value = useMemo<AuthContextType>(

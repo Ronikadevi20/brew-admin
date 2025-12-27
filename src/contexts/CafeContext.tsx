@@ -154,20 +154,50 @@ export function CafeProvider({ children }: CafeProviderProps) {
       return;
     }
 
+    // Skip if already loaded
+    if (myCafe) {
+      setIsInitialized(true);
+      return;
+    }
+
     setIsLoading(true);
     
     try {
-      // Note: You may need to add an endpoint to get the user's own cafe
-      // For now, we assume the cafe ID is stored somewhere or fetched separately
-      // This is a placeholder - adjust based on your API
+      console.log('Loading my cafe from API...');
+      const cafeData = await cafeService.getMyCafe();
+      console.log('Loaded cafe:', cafeData);
+      
+      setMyCafe(cafeData);
+      
+      // Also update local profile state with cafe data
+      setCafe((prev) => ({
+        ...prev,
+        id: cafeData.id,
+        name: cafeData.name,
+        logo: cafeData.imageUrl || null,
+        description: cafeData.description || '',
+        address: cafeData.address,
+        city: cafeData.city,
+        phone: cafeData.phone || '',
+        email: cafeData.email || '',
+        instagram: cafeData.instagram || '',
+        website: cafeData.website || '',
+        verificationMethod: (cafeData.verificationMethod as 'pin' | 'qr_only') || 'pin',
+        onboardingComplete: true,
+      }));
+      
       setIsInitialized(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load cafe:', error);
+      // If cafe not found, user might not have completed onboarding properly
+      if (error.response?.status === 404) {
+        console.warn('No cafe found for user');
+      }
+      setIsInitialized(true);
     } finally {
       setIsLoading(false);
-      setIsInitialized(true);
     }
-  }, [user]);
+  }, [user?.id, user?.hasCompletedOnboarding, myCafe]);
 
   /**
    * Complete onboarding (wrapper around createCafe)
@@ -189,12 +219,16 @@ export function CafeProvider({ children }: CafeProviderProps) {
    * Initialize on mount and when user changes
    */
   useEffect(() => {
-    if (user) {
+    // Only run when user state changes
+    if (user && user.hasCompletedOnboarding && !myCafe && !isLoading) {
       loadMyCafe();
-    } else {
+    } else if (!user) {
+      setMyCafe(null);
+      setIsInitialized(true);
+    } else if (user && !user.hasCompletedOnboarding) {
       setIsInitialized(true);
     }
-  }, [user, loadMyCafe]);
+  }, [user?.id, user?.hasCompletedOnboarding]);
 
   // Memoize context value
   const value = useMemo<CafeContextType>(

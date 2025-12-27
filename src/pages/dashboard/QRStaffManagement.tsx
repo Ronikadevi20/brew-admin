@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Table,
   TableBody,
@@ -21,6 +23,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useCafe } from "@/contexts/CafeContext";
+import { cafeAdminService } from "@/services/cafeadmin.service";
+import { getUploadUrl, API_BASE_URL } from "@/config/api.config";
 import {
   QrCode,
   Download,
@@ -33,36 +38,92 @@ import {
   Clock,
   User,
   AlertCircle,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
-
-const pinLogsData = [
-  { id: 1, time: "5:32 PM", action: "Stamp given", staffMember: "Staff #1" },
-  { id: 2, time: "5:28 PM", action: "Stamp given", staffMember: "Staff #1" },
-  { id: 3, time: "5:15 PM", action: "Stamp given", staffMember: "Staff #2" },
-  { id: 4, time: "4:45 PM", action: "Stamp given", staffMember: "Staff #1" },
-  { id: 5, time: "4:32 PM", action: "Free drink redeemed", staffMember: "Staff #2" },
-  { id: 6, time: "4:20 PM", action: "Stamp given", staffMember: "Staff #1" },
-  { id: 7, time: "4:10 PM", action: "Stamp given", staffMember: "Staff #1" },
-  { id: 8, time: "3:55 PM", action: "Stamp given", staffMember: "Staff #2" },
-];
+import type { PinActivityData, PinScan } from "@/types/cafeadmin.types";
 
 export default function QRStaffManagement() {
   const { toast } = useToast();
+  const { myCafe } = useCafe();
+  
+  // State
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showPin, setShowPin] = useState(false);
-  const [currentPin, setCurrentPin] = useState("4829");
+  const [currentPin, setCurrentPin] = useState<string | null>(null);
+  const [qrCode, setQrCode] = useState<string | null>(null);
   const [isChangePinOpen, setIsChangePinOpen] = useState(false);
   const [newPin, setNewPin] = useState("");
+  const [isUpdatingPin, setIsUpdatingPin] = useState(false);
+  
+  // PIN Activity state
+  const [pinActivity, setPinActivity] = useState<PinActivityData | null>(null);
 
-  const handleRegeneratePin = () => {
-    const pin = Math.floor(1000 + Math.random() * 9000).toString();
-    setCurrentPin(pin);
-    toast({
-      title: "PIN regenerated",
-      description: "Your new staff PIN has been generated.",
-    });
+  // Load data
+  const loadData = useCallback(async () => {
+    if (!myCafe?.id) {
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Load dashboard for PIN and QR code
+      const [dashboardData, activityData] = await Promise.all([
+        cafeAdminService.getDashboard(myCafe.id),
+        cafeAdminService.getTodayPinActivity(myCafe.id).catch(() => null),
+      ]);
+
+      setCurrentPin(dashboardData.currentPin);
+      setQrCode(myCafe.qrCode);
+      
+      if (activityData) {
+        setPinActivity(activityData);
+      }
+    } catch (err: any) {
+      console.error("Failed to load data:", err);
+      // Don't set error for dashboard - just use cafe data
+      setCurrentPin(myCafe.staffPin || null);
+      setQrCode(myCafe.qrCode);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [myCafe?.id, myCafe?.staffPin, myCafe?.qrCode]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  // Handle PIN regeneration (random)
+  const handleRegeneratePin = async () => {
+    if (!myCafe?.id) return;
+
+    setIsUpdatingPin(true);
+    try {
+      const result = await cafeAdminService.updatePin(myCafe.id);
+      setCurrentPin(result.staffPin);
+      toast({
+        title: "PIN regenerated",
+        description: "Your new staff PIN has been generated.",
+      });
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.response?.data?.message || "Failed to regenerate PIN",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdatingPin(false);
+    }
   };
 
-  const handleChangePin = () => {
+  // Handle custom PIN change
+  const handleChangePin = async () => {
+    if (!myCafe?.id) return;
+
     if (newPin.length !== 4 || !/^\d+$/.test(newPin)) {
       toast({
         title: "Invalid PIN",
@@ -71,22 +132,54 @@ export default function QRStaffManagement() {
       });
       return;
     }
-    setCurrentPin(newPin);
-    setNewPin("");
-    setIsChangePinOpen(false);
-    toast({
-      title: "PIN changed",
-      description: "Your staff PIN has been updated.",
-    });
+
+    setIsUpdatingPin(true);
+    try {
+      const result = await cafeAdminService.updatePin(myCafe.id, newPin);
+      setCurrentPin(result.staffPin);
+      setNewPin("");
+      setIsChangePinOpen(false);
+      toast({
+        title: "PIN changed",
+        description: "Your staff PIN has been updated.",
+      });
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.response?.data?.message || "Failed to change PIN",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdatingPin(false);
+    }
   };
 
+  // Handle QR code download
   const handleDownloadQR = () => {
+    if (!qrCode) {
+      toast({
+        title: "No QR Code",
+        description: "QR code is not available.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Create download link
+    const link = document.createElement("a");
+    link.href = getUploadUrl(qrCode) || qrCode;
+    link.download = `${myCafe?.name || 'cafe'}-qrcode.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
     toast({
       title: "Downloading QR code",
       description: "Your QR code is being downloaded.",
     });
   };
 
+  // Handle print
   const handlePrintQR = () => {
     toast({
       title: "Preparing print",
@@ -94,6 +187,49 @@ export default function QRStaffManagement() {
     });
     window.print();
   };
+
+  // Format time
+  const formatTime = (dateString: string | null): string => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    return date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-8">
+          <div>
+            <Skeleton className="h-9 w-72 mb-2" />
+            <Skeleton className="h-5 w-96" />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <Skeleton className="h-[500px] rounded-xl" />
+            <div className="space-y-6">
+              <Skeleton className="h-64 rounded-xl" />
+              <Skeleton className="h-64 rounded-xl" />
+            </div>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // No cafe error
+  if (!myCafe) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <Alert variant="destructive" className="max-w-md">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>No Cafe Found</AlertTitle>
+            <AlertDescription>Please complete your cafe setup first.</AlertDescription>
+          </Alert>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -103,6 +239,15 @@ export default function QRStaffManagement() {
           <h1 className="text-3xl font-serif font-bold text-foreground">QR & Staff Management</h1>
           <p className="text-muted-foreground mt-1">Manage your café's QR code and staff authentication</p>
         </div>
+
+        {/* Error Alert */}
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* QR Code Section */}
@@ -116,20 +261,18 @@ export default function QRStaffManagement() {
             <CardContent className="space-y-6">
               {/* QR Code Display */}
               <div className="flex flex-col items-center">
-                <div className="w-48 h-48 bg-card border-2 border-border rounded-2xl p-4 mb-4 shadow-coffee-md">
-                  <div className="w-full h-full bg-foreground rounded-lg flex items-center justify-center">
-                    <div className="w-36 h-36 bg-card rounded grid grid-cols-7 grid-rows-7 gap-0.5 p-2">
-                      {/* QR Code Pattern Simulation */}
-                      {Array.from({ length: 49 }).map((_, i) => (
-                        <div
-                          key={i}
-                          className={`rounded-sm ${
-                            Math.random() > 0.4 ? "bg-foreground" : "bg-transparent"
-                          }`}
-                        />
-                      ))}
+                <div className="w-48 h-48 bg-card border-2 border-border rounded-2xl p-4 mb-4 shadow-coffee-md overflow-hidden">
+                  {qrCode ? (
+                    <img
+                      src={getUploadUrl(qrCode) || qrCode}
+                      alt="Cafe QR Code"
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-secondary rounded-lg flex items-center justify-center">
+                      <QrCode className="w-16 h-16 text-muted-foreground" />
                     </div>
-                  </div>
+                  )}
                 </div>
                 <p className="text-sm text-muted-foreground text-center mb-4">
                   Customers scan this code to collect stamps
@@ -138,7 +281,7 @@ export default function QRStaffManagement() {
 
               {/* Actions */}
               <div className="flex gap-3">
-                <Button variant="coffee" className="flex-1" onClick={handleDownloadQR}>
+                <Button variant="coffee" className="flex-1" onClick={handleDownloadQR} disabled={!qrCode}>
                   <Download className="w-4 h-4 mr-2" />
                   Download
                 </Button>
@@ -152,8 +295,16 @@ export default function QRStaffManagement() {
               <div className="bg-gradient-warm rounded-xl p-6 text-center">
                 <p className="text-sm font-medium text-mocha mb-3">Table Tent Preview</p>
                 <div className="bg-card rounded-lg p-4 max-w-[150px] mx-auto shadow-coffee-md">
-                  <div className="w-16 h-16 bg-foreground rounded mx-auto mb-2 flex items-center justify-center">
-                    <QrCode className="w-10 h-10 text-card" />
+                  <div className="w-16 h-16 bg-foreground rounded mx-auto mb-2 flex items-center justify-center overflow-hidden">
+                    {qrCode ? (
+                      <img
+                        src={getUploadUrl(qrCode) || qrCode}
+                        alt="QR Preview"
+                        className="w-12 h-12 object-contain"
+                      />
+                    ) : (
+                      <QrCode className="w-10 h-10 text-card" />
+                    )}
                   </div>
                   <p className="text-[10px] text-foreground font-medium">Scan for Stamps</p>
                 </div>
@@ -202,14 +353,18 @@ export default function QRStaffManagement() {
                     </Button>
                   </div>
                   <div className="flex items-center justify-center gap-3">
-                    {currentPin.split("").map((digit, i) => (
-                      <div
-                        key={i}
-                        className="w-12 h-14 bg-card rounded-xl flex items-center justify-center text-2xl font-serif font-bold text-foreground shadow-coffee-sm"
-                      >
-                        {showPin ? digit : "•"}
-                      </div>
-                    ))}
+                    {currentPin ? (
+                      currentPin.split("").map((digit, i) => (
+                        <div
+                          key={i}
+                          className="w-12 h-14 bg-card rounded-xl flex items-center justify-center text-2xl font-serif font-bold text-foreground shadow-coffee-sm"
+                        >
+                          {showPin ? digit : "•"}
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-muted-foreground">No PIN set</p>
+                    )}
                   </div>
                 </div>
 
@@ -219,8 +374,9 @@ export default function QRStaffManagement() {
                     variant="cream"
                     className="flex-1"
                     onClick={handleRegeneratePin}
+                    disabled={isUpdatingPin}
                   >
-                    <RefreshCw className="w-4 h-4 mr-2" />
+                    <RefreshCw className={`w-4 h-4 mr-2 ${isUpdatingPin ? 'animate-spin' : ''}`} />
                     Regenerate
                   </Button>
                   <Dialog open={isChangePinOpen} onOpenChange={setIsChangePinOpen}>
@@ -250,8 +406,9 @@ export default function QRStaffManagement() {
                           variant="coffee"
                           className="w-full"
                           onClick={handleChangePin}
+                          disabled={isUpdatingPin}
                         >
-                          Save New PIN
+                          {isUpdatingPin ? "Saving..." : "Save New PIN"}
                         </Button>
                       </div>
                     </DialogContent>
@@ -282,51 +439,70 @@ export default function QRStaffManagement() {
               <CardContent>
                 <div className="flex items-center justify-between mb-4">
                   <div className="text-center">
-                    <p className="text-3xl font-serif font-bold text-foreground">47</p>
+                    <p className="text-3xl font-serif font-bold text-foreground">
+                      {pinActivity?.usesToday ?? 0}
+                    </p>
                     <p className="text-xs text-muted-foreground">Uses today</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-3xl font-serif font-bold text-foreground">5:32 PM</p>
+                    <p className="text-3xl font-serif font-bold text-foreground">
+                      {pinActivity?.lastUsed ? formatTime(pinActivity.lastUsed) : "N/A"}
+                    </p>
                     <p className="text-xs text-muted-foreground">Last used</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-3xl font-serif font-bold text-foreground">3</p>
+                    <p className="text-3xl font-serif font-bold text-foreground">
+                      {pinActivity?.redemptions ?? 0}
+                    </p>
                     <p className="text-xs text-muted-foreground">Redemptions</p>
                   </div>
                 </div>
 
                 {/* Recent Activity */}
                 <div className="max-h-64 overflow-y-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Time</TableHead>
-                        <TableHead>Action</TableHead>
-                        <TableHead>Staff</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {pinLogsData.map((log) => (
-                        <TableRow key={log.id}>
-                          <TableCell className="text-muted-foreground">{log.time}</TableCell>
-                          <TableCell>
-                            <Badge
-                              variant={log.action.includes("redeemed") ? "default" : "secondary"}
-                              className={log.action.includes("redeemed") ? "bg-success" : ""}
-                            >
-                              {log.action}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-muted-foreground">
-                            <span className="flex items-center gap-1">
-                              <User className="w-3 h-3" />
-                              {log.staffMember}
-                            </span>
-                          </TableCell>
+                  {pinActivity?.recentScans && pinActivity.recentScans.length > 0 ? (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Time</TableHead>
+                          <TableHead>Action</TableHead>
+                          <TableHead>Staff</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {pinActivity.recentScans.map((scan: PinScan) => (
+                          <TableRow key={scan.id}>
+                            <TableCell className="text-muted-foreground">
+                              {formatTime(scan.time)}
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant={scan.action.includes("redeemed") ? "default" : "secondary"}
+                                className={scan.action.includes("redeemed") ? "bg-success" : ""}
+                              >
+                                {scan.action}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-muted-foreground">
+                              <span className="flex items-center gap-1">
+                                {scan.verified ? (
+                                  <CheckCircle className="w-3 h-3 text-success" />
+                                ) : (
+                                  <XCircle className="w-3 h-3 text-destructive" />
+                                )}
+                                {scan.staffMember}
+                              </span>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Clock className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                      <p>No activity today</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

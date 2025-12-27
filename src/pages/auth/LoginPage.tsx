@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Coffee, Mail, Lock, ArrowRight } from "lucide-react";
 import { AxiosError } from "axios";
@@ -12,9 +12,21 @@ import type { ApiErrorResponse } from "@/types/auth.types";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { login, isLoading } = useAuth();
+  const { login, isLoading, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Handle navigation after login state changes
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      // Navigate based on onboarding status
+      if (user.role === 'CAFE_ADMIN' && !user.hasCompletedOnboarding) {
+        navigate('/onboarding', { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
+    }
+  }, [isAuthenticated, user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,6 +37,7 @@ export default function LoginPage() {
         title: "Welcome back!",
         description: "You have successfully signed in.",
       });
+      // Navigation is handled by the useEffect above after state updates
     } catch (error) {
       const axiosError = error as AxiosError<ApiErrorResponse>;
       const message = axiosError.response?.data?.message || "Invalid credentials. Please try again.";
@@ -50,7 +63,7 @@ export default function LoginPage() {
             <rect width="100" height="100" fill="url(#coffee-beans)" />
           </svg>
         </div>
-
+        
         <div className="relative z-10 flex flex-col justify-center items-center w-full p-12 text-primary-foreground">
           <div className="w-20 h-20 bg-caramel rounded-2xl flex items-center justify-center mb-8 shadow-glow animate-fade-in">
             <Coffee className="w-10 h-10" />
@@ -61,7 +74,7 @@ export default function LoginPage() {
           <p className="text-lg text-primary-foreground/80 text-center max-w-md animate-fade-in stagger-2 opacity-0">
             Manage your café, track customer engagement, and grow your coffee community.
           </p>
-
+          
           {/* Floating elements */}
           <div className="absolute top-20 left-20 w-32 h-32 bg-caramel/20 rounded-full blur-3xl animate-pulse" />
           <div className="absolute bottom-40 right-20 w-48 h-48 bg-latte/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
@@ -156,17 +169,12 @@ export default function LoginPage() {
               </Button>
             </form>
 
-            <div className="mt-6 text-center border-t border-border pt-6">
-              <p className="text-sm text-muted-foreground">
-                Don't have an account?{" "}
-                <Link
-                  to="/register"
-                  className="text-accent hover:text-accent/80 font-medium transition-colors"
-                >
-                  Register your café
-                </Link>
-              </p>
-            </div>
+            <p className="text-center text-sm text-muted-foreground mt-6">
+              Don't have an account?{" "}
+              <Link to="/register" className="text-accent hover:text-accent/80 font-medium">
+                Register your café
+              </Link>
+            </p>
           </div>
 
           <p className="text-center text-sm text-muted-foreground mt-8">
