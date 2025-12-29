@@ -15,6 +15,19 @@ import { HoursEditor } from "./HoursEditor";
 import { Upload, X, ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+const CITIES = [
+  "Karachi",
+  "Lahore",
+  "Islamabad",
+  "Rawalpindi",
+  "Faisalabad",
+  "Multan",
+  "Peshawar",
+  "Quetta",
+  "Hyderabad",
+  "Sialkot",
+];
+
 const AREAS = [
   "Clifton",
   "DHA",
@@ -74,6 +87,7 @@ export function ProfileForm({ onNext, onSaveDraft, isLoading }: ProfileFormProps
     if (!cafe.description.trim()) newErrors.description = "Description is required";
     if (cafe.description.length > 140) newErrors.description = "Max 140 characters";
     if (!cafe.address.trim()) newErrors.address = "Address is required";
+    if (!cafe.city.trim()) newErrors.city = "City is required";
     if (!cafe.area && !otherArea) newErrors.area = "Area is required";
     if (!cafe.phone.trim()) newErrors.phone = "Phone is required";
     if (!cafe.email.trim()) newErrors.email = "Email is required";
@@ -239,6 +253,31 @@ export function ProfileForm({ onNext, onSaveDraft, isLoading }: ProfileFormProps
           />
           {errors.address && (
             <p className="text-xs text-destructive mt-1">{errors.address}</p>
+          )}
+        </div>
+
+        {/* City */}
+        <div>
+          <Label htmlFor="city" className="text-sm font-medium">
+            City *
+          </Label>
+          <Select
+            value={cafe.city}
+            onValueChange={(value) => updateCafe({ city: value })}
+          >
+            <SelectTrigger className={cn("mt-1.5", errors.city && "border-destructive")}>
+              <SelectValue placeholder="Select city" />
+            </SelectTrigger>
+            <SelectContent className="bg-popover border-border">
+              {CITIES.map((city) => (
+                <SelectItem key={city} value={city}>
+                  {city}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {errors.city && (
+            <p className="text-xs text-destructive mt-1">{errors.city}</p>
           )}
         </div>
 
