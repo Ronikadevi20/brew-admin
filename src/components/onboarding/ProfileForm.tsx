@@ -361,6 +361,71 @@ export function ProfileForm({ onNext, onSaveDraft, isLoading }: ProfileFormProps
           />
         </div>
 
+        {/* Reward Settings Section */}
+        <div className="md:col-span-2 pt-4 border-t border-border">
+          <h3 className="text-lg font-semibold text-foreground mb-4">Stamp Card Rewards</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            Configure your loyalty program - how many stamps customers need to earn a reward
+          </p>
+        </div>
+
+        {/* Stamps Required */}
+        <div>
+          <Label htmlFor="stampsRequired" className="text-sm font-medium">
+            Stamps Required for Reward *
+          </Label>
+          <Select
+            value={String(cafe.stampsRequired || 10)}
+            onValueChange={(value) => updateCafe({ stampsRequired: parseInt(value) })}
+          >
+            <SelectTrigger className="mt-1.5">
+              <SelectValue placeholder="Select stamps" />
+            </SelectTrigger>
+            <SelectContent className="bg-popover border-border">
+              {[5, 6, 7, 8, 9, 10].map((num) => (
+                <SelectItem key={num} value={String(num)}>
+                  {num} stamps
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground mt-1">
+            Customers collect this many stamps to earn a reward
+          </p>
+        </div>
+
+        {/* Reward Description */}
+        <div>
+          <Label htmlFor="rewardDescription" className="text-sm font-medium">
+            Reward Offered *
+          </Label>
+          <Input
+            id="rewardDescription"
+            value={cafe.rewardDescription || ''}
+            onChange={(e) => updateCafe({ rewardDescription: e.target.value })}
+            placeholder="e.g., Free Coffee, 20% Off, Free Pastry"
+            className="mt-1.5"
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            What customers receive when they complete their stamp card
+          </p>
+        </div>
+
+        {/* Reward Terms (Optional) */}
+        <div className="md:col-span-2">
+          <Label htmlFor="rewardTerms" className="text-sm font-medium">
+            Terms & Conditions <span className="text-muted-foreground font-normal">(Optional)</span>
+          </Label>
+          <Textarea
+            id="rewardTerms"
+            value={cafe.rewardTerms || ''}
+            onChange={(e) => updateCafe({ rewardTerms: e.target.value })}
+            placeholder="e.g., Valid on any hot beverage. Cannot be combined with other offers."
+            className="mt-1.5 resize-none"
+            rows={2}
+          />
+        </div>
+
         {/* Operating Hours */}
         <div className="md:col-span-2">
           <HoursEditor

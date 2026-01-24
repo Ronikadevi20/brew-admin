@@ -18,6 +18,8 @@ import type {
   UpdatePinApiResponse,
   PeakHoursResponse,
   RecentVisitorsResponse,
+  RewardRedemptionResult,
+  ValidateRedemptionResponse,
 } from '@/types/cafeadmin.types';
 
 export const cafeAdminService = {
@@ -83,6 +85,17 @@ export const cafeAdminService = {
   getPeakHours: async (cafeId: string): Promise<PeakHour[]> => {
     const response = await apiClient.get<PeakHoursResponse>(
       API_ENDPOINTS.CAFE_ADMIN.PEAK_HOURS(cafeId)
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Validate and redeem a reward token
+   */
+  validateRedemption: async (token: string): Promise<RewardRedemptionResult> => {
+    const response = await apiClient.post<ValidateRedemptionResponse>(
+      API_ENDPOINTS.STAMPS.VALIDATE_REDEMPTION,
+      { token }
     );
     return response.data.data;
   },

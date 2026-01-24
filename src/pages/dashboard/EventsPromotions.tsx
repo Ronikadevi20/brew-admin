@@ -66,20 +66,21 @@ import type {
   DiscountType,
 } from "@/types/events.types";
 
-// Event type options
+// Event type options - must match backend EventType enum
 const eventTypeOptions: { value: EventType; label: string }[] = [
   { value: "LIVE_MUSIC", label: "Live Music" },
   { value: "OPEN_MIC", label: "Open Mic" },
   { value: "WORKSHOP", label: "Workshop" },
   { value: "TASTING", label: "Tasting" },
   { value: "MEETUP", label: "Meetup" },
+  { value: "SPECIAL_EVENT", label: "Special Event" },
   { value: "OTHER", label: "Other" },
 ];
 
-// Discount type options
+// Discount type options - must match backend DiscountType enum
 const discountTypeOptions: { value: DiscountType; label: string }[] = [
   { value: "PERCENTAGE", label: "Percentage Off" },
-  { value: "FIXED", label: "Fixed Amount Off" },
+  { value: "FIXED_AMOUNT", label: "Fixed Amount Off" },
   { value: "BUY_ONE_GET_ONE", label: "Buy One Get One" },
   { value: "FREE_ITEM", label: "Free Item" },
 ];
@@ -95,6 +96,10 @@ const getEventIcon = (eventType: EventType) => {
       return Coffee;
     case "TASTING":
       return Coffee;
+    case "MEETUP":
+      return Users;
+    case "SPECIAL_EVENT":
+      return Gift;
     default:
       return Calendar;
   }
@@ -331,7 +336,7 @@ export default function EventsPromotions() {
         cafeId: myCafe.id,
         maxRedemptions: offerForm.maxRedemptions || undefined,
         code: offerForm.code || undefined,
-        imageUrl: offerForm.imageUrl || undefined,
+        // Promotions should not have images
       };
 
       await offersService.create(data);
@@ -795,9 +800,9 @@ export default function EventsPromotions() {
                   className="group hover:shadow-coffee-xl transition-all duration-300 animate-slide-up opacity-0 overflow-hidden"
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >
-                  {/* Image or Gradient */}
+                  {/* Image or Gradient - Only show images for events, not promotions */}
                   <div className="h-40 bg-gradient-warm flex items-center justify-center relative">
-                    {data.imageUrl ? (
+                    {isEvent && data.imageUrl ? (
                       <img
                         src={getUploadUrl(data.imageUrl) || ""}
                         alt={data.title}

@@ -19,38 +19,43 @@ import type {
 function profileToCreateRequest(profile: CafeProfile): CreateCafeRequest {
   // Filter out closed days and keep operating hours as array
   const openDays = profile.operatingHours.filter(h => !h.isClosed);
-  
+
   const request: CreateCafeRequest = {
     // Required fields
     name: profile.name,
     address: profile.address,
     city: profile.city || 'Karachi',
     verificationMethod: profile.verificationMethod,
-    
+
     // Optional fields - send null if empty
     phone: profile.phone || null,
     email: profile.email || null,
     description: profile.description || null,
-    
+
     // Image - send base64 directly, backend will handle conversion
     imageUrl: profile.logo || null,
-    
+
     // Staff PIN - only send if verification method is 'pin'
     staffPin: profile.verificationMethod === 'pin' ? (profile.staffPin || null) : null,
-    
+
     // Social links
     instagram: profile.instagram || null,
     website: profile.website || null,
-    
+
     // Operating hours as array (backend expects array format)
     openingHours: openDays.length > 0 ? openDays : null,
-    
+
     // Amenities - empty array for now
     amenities: [],
-    
+
     // Coordinates - optional, send null (backend handles this)
     latitude: null,
     longitude: null,
+
+    // Reward settings
+    stampsRequired: profile.stampsRequired || 10,
+    rewardDescription: profile.rewardDescription || 'Free Coffee',
+    rewardTerms: profile.rewardTerms || null,
   };
 
   return request;

@@ -96,6 +96,9 @@ export const API_ENDPOINTS = {
     PEAK_HOURS: (cafeId: string) => `/cafe-admin/${cafeId}/peak-hours`,
     PIN_ACTIVITY_TODAY: (cafeId: string) => `/cafe-admin/${cafeId}/pin-activity/today`,
   },
+  STAMPS: {
+    VALIDATE_REDEMPTION: '/stamps/validate-redemption',
+  },
 } as const;
 
 // Token storage keys - using constants to avoid typos
