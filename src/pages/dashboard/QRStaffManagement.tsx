@@ -231,15 +231,22 @@ export default function QRStaffManagement() {
     setRedemptionToken("");
   };
 
-  // Handle QR scan result from camera
+  // Handle code redemption (from manual entry or QR scan)
   const handleQRScan = (scannedCode: string) => {
-    setRedemptionToken(scannedCode);
-    // Auto-validate after scanning
+    if (!myCafe?.id) {
+      setRedemptionError("No cafe configured");
+      return;
+    }
+
+    const code = scannedCode.trim().toUpperCase();
+    setRedemptionToken(code);
+
+    // Validate and redeem the code
     setIsValidatingRedemption(true);
     setRedemptionError(null);
     setRedemptionResult(null);
 
-    cafeAdminService.validateRedemption(scannedCode.trim())
+    cafeAdminService.redeemCode(code, myCafe.id)
       .then(async (result) => {
         setRedemptionResult(result);
         setRedemptionToken("");
@@ -256,7 +263,7 @@ export default function QRStaffManagement() {
         }
       })
       .catch((err: any) => {
-        const errorMessage = err.response?.data?.message || err.message || "Failed to validate redemption";
+        const errorMessage = err.response?.data?.message || err.message || "Failed to validate redemption code";
         setRedemptionError(errorMessage);
         toast({
           title: "Redemption Failed",
@@ -435,7 +442,7 @@ export default function QRStaffManagement() {
               <div className="space-y-4">
                 <div className="bg-secondary/50 rounded-xl p-4 mb-4">
                   <p className="text-sm text-muted-foreground">
-                    When a customer shows their reward QR code, scan it with your camera to redeem their reward.
+                    Ask the customer for their 6-letter redemption code, or scan their QR code with your camera.
                   </p>
                 </div>
 
@@ -447,26 +454,40 @@ export default function QRStaffManagement() {
                   </Alert>
                 )}
 
-                {/* Camera Scan Button - Primary Action */}
-                <Button
-                  variant="coffee"
-                  size="lg"
-                  className="w-full h-16 text-lg"
-                  onClick={() => setIsScannerOpen(true)}
-                  disabled={isValidatingRedemption}
-                >
-                  {isValidatingRedemption ? (
-                    <>
-                      <RefreshCw className="w-6 h-6 mr-3 animate-spin" />
-                      Validating...
-                    </>
-                  ) : (
-                    <>
-                      <Camera className="w-6 h-6 mr-3" />
-                      Scan QR Code with Camera
-                    </>
-                  )}
-                </Button>
+                {/* Manual Code Entry - Primary Method */}
+                <div className="space-y-3">
+                  <Label className="text-base font-medium">Enter 6-Letter Code</Label>
+                  <div className="flex gap-3">
+                    <Input
+                      type="text"
+                      maxLength={6}
+                      value={redemptionToken}
+                      onChange={(e) => setRedemptionToken(e.target.value.toUpperCase().replace(/[^A-Z]/g, ''))}
+                      placeholder="ABCDEF"
+                      className="text-center text-2xl tracking-[0.5em] font-mono uppercase flex-1"
+                      disabled={isValidatingRedemption}
+                    />
+                    <Button
+                      variant="coffee"
+                      size="lg"
+                      onClick={() => handleQRScan(redemptionToken)}
+                      disabled={isValidatingRedemption || redemptionToken.length !== 6}
+                      className="px-8"
+                    >
+                      {isValidatingRedemption ? (
+                        <RefreshCw className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <>
+                          <CheckCircle className="w-5 h-5 mr-2" />
+                          Verify
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Ask the customer to show you their 6-letter code from the app
+                  </p>
+                </div>
 
                 <div className="flex items-start gap-3 p-4 bg-warning/10 rounded-xl">
                   <AlertCircle className="w-5 h-5 text-warning mt-0.5" />
@@ -536,25 +557,6 @@ export default function QRStaffManagement() {
                   <Printer className="w-4 h-4 mr-2" />
                   Print
                 </Button>
-              </div>
-
-              {/* Mockup Preview */}
-              <div className="bg-gradient-warm rounded-xl p-6 text-center">
-                <p className="text-sm font-medium text-mocha mb-3">Table Tent Preview</p>
-                <div className="bg-card rounded-lg p-4 max-w-[150px] mx-auto shadow-coffee-md">
-                  <div className="w-16 h-16 bg-foreground rounded mx-auto mb-2 flex items-center justify-center overflow-hidden">
-                    {qrCode ? (
-                      <img
-                        src={getUploadUrl(qrCode) || qrCode}
-                        alt="QR Preview"
-                        className="w-12 h-12 object-contain"
-                      />
-                    ) : (
-                      <QrCode className="w-10 h-10 text-card" />
-                    )}
-                  </div>
-                  <p className="text-[10px] text-foreground font-medium">Scan for Stamps</p>
-                </div>
               </div>
 
               {/* Instructions */}
@@ -824,28 +826,6 @@ export default function QRStaffManagement() {
                   <p className="text-xs text-muted-foreground">
                     Any conditions or restrictions for the reward
                   </p>
-                </div>
-
-                {/* Preview Card */}
-                <div className="bg-gradient-warm rounded-xl p-4">
-                  <p className="text-sm font-medium text-mocha mb-2">Customer Preview</p>
-                  <div className="bg-card rounded-lg p-4 shadow-coffee-sm">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Coffee className="w-5 h-5 text-mocha" />
-                      <span className="font-medium text-foreground">{myCafe?.name || 'Your Cafe'}</span>
-                    </div>
-                    <p className="text-lg font-serif font-bold text-foreground">
-                      {rewardDescription || 'Free Coffee'}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Collect {stampsRequired} stamps to redeem
-                    </p>
-                    {rewardTerms && (
-                      <p className="text-xs text-muted-foreground mt-2 italic">
-                        {rewardTerms}
-                      </p>
-                    )}
-                  </div>
                 </div>
               </div>
             </div>

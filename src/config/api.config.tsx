@@ -98,6 +98,8 @@ export const API_ENDPOINTS = {
   },
   STAMPS: {
     VALIDATE_REDEMPTION: '/stamps/validate-redemption',
+    VERIFY_CODE: '/stamps/verify-code',
+    REDEEM_CODE: '/stamps/redeem-code',
   },
 } as const;
 

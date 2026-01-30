@@ -4,6 +4,9 @@
  * Type definitions for authentication-related data structures.
  */
 
+// Account status for cafe admins
+export type AccountStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
 // User data returned from API
 export interface User {
   id: string;
@@ -12,6 +15,7 @@ export interface User {
   role: 'USER' | 'CAFE_ADMIN' | 'ADMIN';
   membershipType: 'FREE' | 'PREMIUM';
   hasCompletedOnboarding: boolean;
+  accountStatus?: AccountStatus;
   profileImageUrl?: string | null;
   isActive?: boolean;
   isEmailVerified?: boolean;
