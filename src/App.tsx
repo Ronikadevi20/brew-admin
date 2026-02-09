@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { CafeProvider } from "@/contexts/CafeContext";
 import { DashboardProvider } from "@/contexts/DashboardContext";
 
+
 // Auth Pages
 import LoginPage from "./pages/auth/LoginPage";
 import RegisterPage from "./pages/auth/RegisterPage";
