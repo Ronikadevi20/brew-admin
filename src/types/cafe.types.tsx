@@ -53,6 +53,10 @@ export interface Cafe {
     averageRating: number;
     totalReviews: number;
   };
+  // Reward settings
+  stampsRequired?: number;
+  rewardDescription?: string;
+  rewardTerms?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -78,6 +82,10 @@ export interface CafeProfile {
   onboardingStep: number;
   termsAccepted: boolean;
   antifraudAccepted: boolean;
+  // Reward settings
+  stampsRequired: number;
+  rewardDescription: string;
+  rewardTerms: string;
 }
 
 // Create cafe request payload - matches backend CreateCafeDTO
@@ -97,6 +105,10 @@ export interface CreateCafeRequest {
   openingHours?: OperatingHours[] | null;
   instagram?: string | null;
   website?: string | null;
+  // Reward settings
+  stampsRequired?: number;
+  rewardDescription?: string;
+  rewardTerms?: string | null;
 }
 
 // Update cafe request payload - matches backend UpdateCafeDTO
@@ -117,6 +129,10 @@ export interface UpdateCafeRequest {
   instagram?: string | null;
   website?: string | null;
   isActive?: boolean;
+  // Reward settings
+  stampsRequired?: number;
+  rewardDescription?: string;
+  rewardTerms?: string | null;
 }
 
 // Create cafe response
@@ -209,4 +225,8 @@ export const defaultCafeProfile: CafeProfile = {
   onboardingStep: 1,
   termsAccepted: false,
   antifraudAccepted: false,
+  // Reward settings defaults
+  stampsRequired: 10,
+  rewardDescription: 'Free Coffee',
+  rewardTerms: '',
 };

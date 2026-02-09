@@ -72,7 +72,7 @@ export function SubscriptionCard({ onComplete, onBack, isLoading }: Subscription
       </div>
 
       {/* Plan Card */}
-      <div className="p-8 rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-2 border-primary/20">
+      {/* <div className="p-8 rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-2 border-primary/20">
         <div className="flex items-start justify-between mb-6">
           <div>
             <h3 className="text-xl font-serif font-semibold text-foreground">
@@ -108,7 +108,7 @@ export function SubscriptionCard({ onComplete, onBack, isLoading }: Subscription
             <li>• Fraudulent activity may result in termination</li>
           </ul>
         </div>
-      </div>
+      </div> */}
 
       {/* Terms & Conditions */}
       <div className="space-y-4">

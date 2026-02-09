@@ -109,3 +109,28 @@ export interface RecentVisitorsResponse {
   success: boolean;
   data: RecentVisitor[];
 }
+
+// Reward Redemption
+export interface RewardRedemptionUser {
+  id: string;
+  username: string;
+  profileImageUrl: string | null;
+}
+
+export interface RewardRedemptionResult {
+  success: boolean;
+  message: string;
+  user: RewardRedemptionUser;
+  reward: string;
+  cafeName: string;
+  redeemedAt: string;
+}
+
+export interface ValidateRedemptionRequest {
+  token: string;
+}
+
+export interface ValidateRedemptionResponse {
+  success: boolean;
+  data: RewardRedemptionResult;
+}

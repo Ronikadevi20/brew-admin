@@ -145,6 +145,8 @@ export default function StampsVisits() {
     }
   }, [myCafe?.id, period]);
 
+  console.log(metrics)
+
   // Fetch data on mount and when period changes
   useEffect(() => {
     fetchData();
@@ -224,6 +226,8 @@ export default function StampsVisits() {
       </DashboardLayout>
     );
   }
+
+  console.log('red', metrics.redemptions)
 
   return (
     <DashboardLayout>

@@ -18,6 +18,8 @@ import type {
   UpdatePinApiResponse,
   PeakHoursResponse,
   RecentVisitorsResponse,
+  RewardRedemptionResult,
+  ValidateRedemptionResponse,
 } from '@/types/cafeadmin.types';
 
 export const cafeAdminService = {
@@ -83,6 +85,44 @@ export const cafeAdminService = {
   getPeakHours: async (cafeId: string): Promise<PeakHour[]> => {
     const response = await apiClient.get<PeakHoursResponse>(
       API_ENDPOINTS.CAFE_ADMIN.PEAK_HOURS(cafeId)
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Validate and redeem a reward token (legacy QR method)
+   */
+  validateRedemption: async (token: string, cafeId?: string): Promise<RewardRedemptionResult> => {
+    const response = await apiClient.post<ValidateRedemptionResponse>(
+      API_ENDPOINTS.STAMPS.VALIDATE_REDEMPTION,
+      { token, cafeId }
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Verify a 6-letter redemption code (preview only, doesn't redeem)
+   */
+  verifyRedemptionCode: async (code: string, cafeId: string): Promise<{
+    valid: boolean;
+    user: { id: string; username: string; profileImageUrl?: string };
+    reward: string;
+    cafeName: string;
+  }> => {
+    const response = await apiClient.post<{ success: boolean; data: any }>(
+      API_ENDPOINTS.STAMPS.VERIFY_CODE,
+      { code, cafeId }
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Redeem a verified 6-letter code
+   */
+  redeemCode: async (code: string, cafeId: string): Promise<RewardRedemptionResult> => {
+    const response = await apiClient.post<ValidateRedemptionResponse>(
+      API_ENDPOINTS.STAMPS.REDEEM_CODE,
+      { code, cafeId }
     );
     return response.data.data;
   },

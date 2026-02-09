@@ -4,11 +4,11 @@
  * Type definitions for events and promotional offers.
  */
 
-// Event types enum
-export type EventType = 'WORKSHOP' | 'LIVE_MUSIC' | 'OPEN_MIC' | 'TASTING' | 'MEETUP' | 'OTHER';
+// Event types enum - must match backend EventType enum
+export type EventType = 'WORKSHOP' | 'LIVE_MUSIC' | 'OPEN_MIC' | 'TASTING' | 'MEETUP' | 'SPECIAL_EVENT' | 'OTHER';
 
-// Discount types enum
-export type DiscountType = 'PERCENTAGE' | 'FIXED' | 'BUY_ONE_GET_ONE' | 'FREE_ITEM';
+// Discount types enum - must match backend DiscountType enum
+export type DiscountType = 'PERCENTAGE' | 'FIXED_AMOUNT' | 'BUY_ONE_GET_ONE' | 'FREE_ITEM';
 
 // ==================== Events ====================
 

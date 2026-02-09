@@ -104,7 +104,7 @@ export function PinSetup({ onNext, onBack, onSaveDraft, isLoading }: PinSetupPro
             </div>
           </div>
 
-          <div
+          {/* <div
             className={cn(
               "relative flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all",
               cafe.verificationMethod === "qr_only"
@@ -124,7 +124,7 @@ export function PinSetup({ onNext, onBack, onSaveDraft, isLoading }: PinSetupPro
                 </p>
               </Label>
             </div>
-          </div>
+          </div> */}
         </RadioGroup>
       </div>
 
