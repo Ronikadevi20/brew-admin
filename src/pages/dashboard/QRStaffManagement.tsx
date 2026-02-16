@@ -715,7 +715,7 @@ export default function QRStaffManagement() {
                         <TableRow>
                           <TableHead>Time</TableHead>
                           <TableHead>Action</TableHead>
-                          <TableHead>Staff</TableHead>
+                          <TableHead>Username</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>

@@ -457,10 +457,13 @@ export default function EventsPromotions() {
     }
   };
 
-  // Combine and sort items
+  // Combine and sort items - filter out expired promotions
+  const now = new Date();
   const combinedItems: CombinedItem[] = [
     ...events.map(e => ({ type: "event" as const, data: e })),
-    ...offers.map(o => ({ type: "offer" as const, data: o })),
+    ...offers
+      .filter(o => new Date(o.endDate) >= now) // Hide expired promotions
+      .map(o => ({ type: "offer" as const, data: o })),
   ].sort((a, b) => {
     const dateA = new Date(a.data.startDate);
     const dateB = new Date(b.data.startDate);
@@ -670,6 +673,7 @@ export default function EventsPromotions() {
                       />
                     </div>
 
+                    {/* Discount Type and Value - commented out per requirements
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label>Discount Type</Label>
@@ -697,6 +701,7 @@ export default function EventsPromotions() {
                         />
                       </div>
                     </div>
+                    */}
 
                     <div className="space-y-2">
                       <Label>Description *</Label>

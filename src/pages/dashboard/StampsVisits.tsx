@@ -14,8 +14,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  BarChart,
-  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -24,11 +22,10 @@ import {
   PieChart,
   Pie,
   Cell,
-  Legend,
   AreaChart,
   Area,
 } from "recharts";
-import { Stamp, Users, Gift, UserCheck, Clock, TrendingUp, AlertCircle } from "lucide-react";
+import { Users, Gift, UserCheck, Clock, TrendingUp, AlertCircle, Stamp } from "lucide-react";
 import { useCafe } from "@/contexts/CafeContext";
 import { analyticsService } from "@/services/analytics.service";
 import type {
@@ -38,7 +35,6 @@ import type {
   StampCardFunnelData,
   CustomerTypeData,
   DailyStatistics,
-  StampsByDrinkData,
 } from "@/types/analytics.types";
 
 // Chart colors
@@ -50,14 +46,6 @@ const chartColors = {
   quinary: "hsl(36, 47%, 81%)",
 };
 
-// Pie chart colors for drinks
-const drinkColors = [
-  "hsl(20, 35%, 40%)",
-  "hsl(28, 60%, 55%)",
-  "hsl(35, 38%, 65%)",
-  "hsl(8, 31%, 33%)",
-  "hsl(36, 47%, 81%)",
-];
 
 // Default values
 const defaultMetrics: DashboardMetrics = {
@@ -96,10 +84,11 @@ export default function StampsVisits() {
   // Data states
   const [metrics, setMetrics] = useState<DashboardMetrics>(defaultMetrics);
   const [visitsPerHour, setVisitsPerHour] = useState<ChartData>({ labels: [], data: [] });
-  const [stampsByDrink, setStampsByDrink] = useState<StampsByDrinkData[]>([]);
   const [customerType, setCustomerType] = useState<CustomerTypeData>(defaultCustomerType);
   const [funnelData, setFunnelData] = useState<StampCardFunnelData[]>([]);
   const [dailyStats, setDailyStats] = useState<DailyStatistics[]>([]);
+
+  // console.log(dailyStats);
 
   const { myCafe } = useCafe();
 
@@ -118,14 +107,12 @@ export default function StampsVisits() {
       const [
         metricsData,
         visitsData,
-        drinksData,
         customerData,
         funnel,
         daily,
       ] = await Promise.all([
         analyticsService.getDashboardMetrics(myCafe.id, period),
         analyticsService.getVisitsChart(myCafe.id, period),
-        analyticsService.getStampsByDrink(myCafe.id, period, 5),
         analyticsService.getCustomerTypeBreakdown(myCafe.id, period),
         analyticsService.getStampCardFunnel(myCafe.id, period),
         analyticsService.getDailyStatistics(myCafe.id, period, 7),
@@ -133,7 +120,6 @@ export default function StampsVisits() {
 
       setMetrics(metricsData);
       setVisitsPerHour(visitsData);
-      setStampsByDrink(drinksData);
       setCustomerType(customerData);
       setFunnelData(funnel);
       setDailyStats(daily);
@@ -158,12 +144,6 @@ export default function StampsVisits() {
     visits: visitsPerHour.data[index] || 0,
   }));
 
-  // Transform stamps by drink for pie chart
-  const stampsByDrinkChartData = stampsByDrink.map((drink, index) => ({
-    name: drink.name,
-    value: drink.value,
-    color: drinkColors[index % drinkColors.length],
-  }));
 
   // Transform customer type for pie chart
   const customerTypeChartData = [
@@ -294,9 +274,8 @@ export default function StampsVisits() {
           />
         </div>
 
-        {/* Charts Row 1 */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Visits per Hour */}
+        {/* Visits per Hour */}
+        <div>
           <Card className="hover:shadow-coffee-xl transition-shadow duration-300">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -341,48 +320,6 @@ export default function StampsVisits() {
             </CardContent>
           </Card>
 
-          {/* Stamps by Drink */}
-          <Card className="hover:shadow-coffee-xl transition-shadow duration-300">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Stamp className="w-5 h-5 text-mocha" />
-                Stamps by Drink Type
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {stampsByDrinkChartData.length === 0 || stampsByDrinkChartData.every(d => d.value === 0) ? (
-                <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                  No drink data available
-                </div>
-              ) : (
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={stampsByDrinkChartData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={100}
-                      paddingAngle={3}
-                      dataKey="value"
-                    >
-                      {stampsByDrinkChartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "hsl(0, 0%, 100%)",
-                        border: "1px solid hsl(35, 25%, 88%)",
-                        borderRadius: "12px",
-                      }}
-                    />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              )}
-            </CardContent>
-          </Card>
         </div>
 
         {/* Charts Row 2 */}

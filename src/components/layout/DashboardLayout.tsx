@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { NavLink as RouterNavLink, useLocation } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
+import { NavLink as RouterNavLink, useLocation, useNavigate } from "react-router-dom";
 import { 
   Coffee, 
   LayoutDashboard, 
@@ -45,27 +45,55 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user, logout } = useAuth();
   const { cafe, myCafe } = useCafe();
   const location = useLocation();
+  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
-
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   // Fetch notification count
-  useEffect(() => {
-    const fetchNotificationCount = async () => {
-      try {
-        const stats = await notificationsService.getStats();
-        setUnreadCount(stats.unread);
-      } catch (error) {
-        console.error("Failed to fetch notification stats:", error);
-      }
-    };
+  const fetchNotificationCount = useCallback(async () => {
+    try {
+      const stats = await notificationsService.getStats();
+      setUnreadCount(stats.unread);
+    } catch (error) {
+      console.error("Failed to fetch notification stats:", error);
+    }
+  }, []);
 
+  // Fetch recent notifications for dropdown
+  const fetchRecentNotifications = useCallback(async () => {
+    try {
+      const result = await notificationsService.getNotifications(1, 10);
+      setNotifications(result.data);
+    } catch (error) {
+      console.error("Failed to fetch notifications:", error);
+    }
+  }, []);
+
+  useEffect(() => {
     fetchNotificationCount();
-    
     // Refresh every 60 seconds
     const interval = setInterval(fetchNotificationCount, 60000);
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchNotificationCount]);
+
+  const handleBellClick = async () => {
+    setShowNotifications((prev) => !prev);
+    if (!showNotifications) {
+      await fetchRecentNotifications();
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    try {
+      await notificationsService.markAllAsRead();
+      setUnreadCount(0);
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    } catch (error) {
+      console.error("Failed to mark all as read:", error);
+    }
+  };
 
   // Close sidebar on route change (mobile)
   useEffect(() => {
@@ -177,14 +205,74 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="w-5 h-5 text-muted-foreground" />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-caramel text-primary-foreground text-xs rounded-full flex items-center justify-center">
-                  {unreadCount > 9 ? "9+" : unreadCount}
-                </span>
+            {/* Notification Bell with Dropdown */}
+            <div className="relative">
+              <Button variant="ghost" size="icon" className="relative" onClick={handleBellClick}>
+                <Bell className="w-5 h-5 text-muted-foreground" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-caramel text-primary-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
+              </Button>
+
+              {/* Notifications Panel */}
+              {showNotifications && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowNotifications(false)} />
+                  <div className="absolute right-0 top-12 z-50 w-80 bg-card border border-border rounded-xl shadow-coffee-xl overflow-hidden">
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+                      <h3 className="font-semibold text-foreground text-sm">Notifications</h3>
+                      {unreadCount > 0 && (
+                        <button
+                          onClick={handleMarkAllRead}
+                          className="text-xs text-accent hover:text-accent/80 font-medium"
+                        >
+                          Mark all read
+                        </button>
+                      )}
+                    </div>
+                    <div className="max-h-80 overflow-y-auto">
+                      {notifications.length === 0 ? (
+                        <div className="p-6 text-center text-muted-foreground text-sm">
+                          No notifications yet
+                        </div>
+                      ) : (
+                        notifications.map((notif) => (
+                          <div
+                            key={notif.id}
+                            className={cn(
+                              "px-4 py-3 border-b border-border/50 last:border-0 hover:bg-secondary/30 transition-colors",
+                              !notif.isRead && "bg-secondary/20"
+                            )}
+                          >
+                            <div className="flex items-start gap-3">
+                              {!notif.isRead && (
+                                <div className="w-2 h-2 bg-caramel rounded-full mt-1.5 flex-shrink-0" />
+                              )}
+                              <div className={cn("flex-1", notif.isRead && "ml-5")}>
+                                <p className="text-sm font-medium text-foreground">{notif.title}</p>
+                                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{notif.message}</p>
+                                <p className="text-[10px] text-muted-foreground/60 mt-1">
+                                  {new Date(notif.createdAt).toLocaleDateString("en-US", {
+                                    month: "short",
+                                    day: "numeric",
+                                    hour: "numeric",
+                                    minute: "2-digit",
+                                  })}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </>
               )}
-            </Button>
+            </div>
+
+            {/* User Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="flex items-center gap-2 px-2">
@@ -201,7 +289,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem>Profile Settings</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/dashboard/profile")}>
+                  Profile Settings
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={logout} className="text-destructive">
                   Logout
                 </DropdownMenuItem>

@@ -77,9 +77,15 @@ function ProtectedRoute({
     return <Navigate to="/" replace />;
   }
 
-  // For cafe admins, redirect to onboarding if not completed
-  if (requireOnboarding && user?.role === 'CAFE_ADMIN' && !user?.hasCompletedOnboarding) {
-    return <Navigate to="/onboarding" replace />;
+  // For cafe admins, check onboarding and approval status
+  if (requireOnboarding && user?.role === 'CAFE_ADMIN') {
+    if (!user?.hasCompletedOnboarding) {
+      return <Navigate to="/onboarding" replace />;
+    }
+    // Block PENDING or REJECTED users from accessing dashboard
+    if (user?.accountStatus !== 'APPROVED') {
+      return <Navigate to="/" replace />;
+    }
   }
 
   // Wrap with DashboardProvider if needed
@@ -126,11 +132,17 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 
   // Redirect authenticated users
   if (isAuthenticated) {
-    // Cafe admins without onboarding go to onboarding
-    if (user?.role === 'CAFE_ADMIN' && !user?.hasCompletedOnboarding) {
-      return <Navigate to="/onboarding" replace />;
+    if (user?.role === 'CAFE_ADMIN') {
+      // Not onboarded yet - send to onboarding regardless of approval status
+      if (!user?.hasCompletedOnboarding) {
+        return <Navigate to="/onboarding" replace />;
+      }
+      // Onboarded but not approved - stay on login page (don't redirect)
+      if (user?.accountStatus !== 'APPROVED') {
+        return <>{children}</>;
+      }
     }
-    // Otherwise go to dashboard
+    // Approved or non-cafe-admin users go to dashboard
     return <Navigate to="/dashboard" replace />;
   }
 
