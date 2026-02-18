@@ -30,8 +30,8 @@ export function PinSetup({ onNext, onBack, onSaveDraft, isLoading }: PinSetupPro
     if (cafe.verificationMethod === "pin") {
       if (!cafe.staffPin) {
         newErrors.pin = "PIN is required";
-      } else if (cafe.staffPin.length < 4 || cafe.staffPin.length > 6) {
-        newErrors.pin = "PIN must be 4-6 digits";
+      } else if (cafe.staffPin.length !== 4) {
+        newErrors.pin = "PIN must be exactly 4 digits";
       } else if (!/^\d+$/.test(cafe.staffPin)) {
         newErrors.pin = "PIN must contain only numbers";
       }
@@ -139,18 +139,18 @@ export function PinSetup({ onNext, onBack, onSaveDraft, isLoading }: PinSetupPro
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <Label htmlFor="staffPin" className="text-sm font-medium">
-                Enter PIN (4-6 digits) *
+                Enter PIN (4 digits) *
               </Label>
               <Input
                 id="staffPin"
                 type="password"
-                maxLength={6}
+                maxLength={4}
                 value={cafe.staffPin}
                 onChange={(e) => {
                   const value = e.target.value.replace(/\D/g, "");
                   updateCafe({ staffPin: value });
                 }}
-                placeholder="••••••"
+                placeholder="••••"
                 className={cn("mt-1.5 font-mono text-lg tracking-widest", errors.pin && "border-destructive")}
               />
               {errors.pin && (
@@ -165,13 +165,13 @@ export function PinSetup({ onNext, onBack, onSaveDraft, isLoading }: PinSetupPro
               <Input
                 id="confirmPin"
                 type="password"
-                maxLength={6}
+                maxLength={4}
                 value={confirmPin}
                 onChange={(e) => {
                   const value = e.target.value.replace(/\D/g, "");
                   setConfirmPin(value);
                 }}
-                placeholder="••••••"
+                placeholder="••••"
                 className={cn("mt-1.5 font-mono text-lg tracking-widest", errors.confirmPin && "border-destructive")}
               />
               {errors.confirmPin && (

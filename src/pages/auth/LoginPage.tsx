@@ -12,21 +12,42 @@ import type { ApiErrorResponse } from "@/types/auth.types";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { login, isLoading, isAuthenticated, user } = useAuth();
+  const { login, logout, isLoading, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   // Handle navigation after login state changes
   useEffect(() => {
     if (isAuthenticated && user) {
-      // Navigate based on onboarding status
-      if (user.role === 'CAFE_ADMIN' && !user.hasCompletedOnboarding) {
-        navigate('/onboarding', { replace: true });
+      // For cafe admins, check account status and onboarding
+      if (user.role === 'CAFE_ADMIN') {
+        if (!user.hasCompletedOnboarding) {
+          // Approved or not, they need to complete onboarding first
+          navigate('/onboarding', { replace: true });
+        } else if (user.accountStatus === 'PENDING') {
+          // Onboarding complete but not yet approved
+          toast({
+            title: "Account Pending Approval",
+            description: "Your account is still under review. You'll receive an email once approved.",
+            variant: "destructive",
+          });
+          logout();
+        } else if (user.accountStatus === 'REJECTED') {
+          toast({
+            title: "Account Rejected",
+            description: "Your account application has been rejected. Please contact support.",
+            variant: "destructive",
+          });
+          logout();
+        } else {
+          // APPROVED - go to dashboard
+          navigate('/dashboard', { replace: true });
+        }
       } else {
         navigate('/dashboard', { replace: true });
       }
     }
-  }, [isAuthenticated, user, navigate]);
+  }, [isAuthenticated, user, navigate, toast, logout]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

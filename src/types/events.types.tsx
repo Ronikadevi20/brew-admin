@@ -72,8 +72,8 @@ export interface Event {
 export interface CreateOfferRequest {
   title: string;
   description: string;
-  discountType: DiscountType;
-  discountValue: number;
+  discountType?: DiscountType;
+  discountValue?: number;
   cafeId?: string;
   startDate: string;
   endDate: string;
@@ -104,8 +104,8 @@ export interface Offer {
   id: string;
   title: string;
   description: string;
-  discountType: DiscountType;
-  discountValue: number;
+  discountType?: DiscountType;
+  discountValue?: number;
   cafeId?: string;
   startDate: string;
   endDate: string;

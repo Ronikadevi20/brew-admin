@@ -16,21 +16,31 @@ import {
   Line,
   Legend,
 } from "recharts";
-import { Camera, Eye, TrendingUp, Coffee, Clock, Calendar, AlertCircle } from "lucide-react";
+import { Camera, Eye, TrendingUp, Clock, Calendar, AlertCircle } from "lucide-react";
 import { useCafe } from "@/contexts/CafeContext";
 import { analyticsService } from "@/services/analytics.service";
-import type { 
+import type {
   DashboardPeriod,
-  BDLTimelineData, 
-  BDLEngagementData, 
+  BDLTimelineData,
+  BDLEngagementData,
   BDLPeakTimesData,
-  DrinkPopularityData,
 } from "@/types/analytics.types";
 
 const chartColors = {
   primary: "hsl(20, 35%, 40%)",
   secondary: "hsl(28, 60%, 55%)",
   tertiary: "hsl(35, 38%, 75%)",
+};
+
+// Format date string to readable format (e.g., "Feb 14")
+const formatDateLabel = (dateStr: string): string => {
+  try {
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return dateStr;
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  } catch {
+    return dateStr;
+  }
 };
 
 // Default empty data
@@ -50,7 +60,6 @@ export default function BDLInsights() {
   const [timelineData, setTimelineData] = useState<BDLTimelineData[]>([]);
   const [engagementData, setEngagementData] = useState<BDLEngagementData[]>([]);
   const [peakTimes, setPeakTimes] = useState<BDLPeakTimesData>(defaultPeakTimes);
-  const [topDrinks, setTopDrinks] = useState<DrinkPopularityData[]>([]);
 
   const { myCafe } = useCafe();
 
@@ -66,17 +75,15 @@ export default function BDLInsights() {
     setError(null);
 
     try {
-      const [timeline, engagement, peak, drinks] = await Promise.all([
+      const [timeline, engagement, peak] = await Promise.all([
         analyticsService.getBDLTimeline(myCafe.id, period),
         analyticsService.getBDLEngagement(myCafe.id, period),
         analyticsService.getBDLPeakTimes(myCafe.id, period),
-        analyticsService.getMostPhotographedDrinks(myCafe.id, period, 5),
       ]);
 
       setTimelineData(timeline);
       setEngagementData(engagement);
       setPeakTimes(peak);
-      setTopDrinks(drinks);
     } catch (err: any) {
       console.error("Failed to fetch BDL data:", err);
       setError(err.response?.data?.message || "Failed to load BDL analytics");
@@ -95,14 +102,11 @@ export default function BDLInsights() {
     ? Math.round(((peakTimes.weekendAvg - peakTimes.weekdayAvg) / peakTimes.weekdayAvg) * 100)
     : 0;
 
+  // Calculate total posts for today's engagement percentage
+  const totalPostsInPeriod = timelineData.reduce((sum, d) => sum + d.posts, 0);
+
   // Insight cards data
   const insightCards = [
-    {
-      title: "Most Photographed Drink",
-      value: topDrinks[0]?.drinkName || "No data",
-      icon: Coffee,
-      description: topDrinks[0] ? `${topDrinks[0].count} photos (${topDrinks[0].percentage}%)` : "Collect more data",
-    },
     {
       title: "Peak BDL Time",
       value: peakTimes.peakTime,
@@ -110,12 +114,16 @@ export default function BDLInsights() {
       description: `Avg ${peakTimes.weekendAvg} posts on weekends`,
     },
     {
-      title: "Top Engagement Days",
-      value: peakTimes.peakDays.join(", ") || "N/A",
+      title: period === "today" ? "Current Engagement" : "Top Engagement Days",
+      value: period === "today"
+        ? `${totalPostsInPeriod} posts`
+        : (peakTimes.peakDays.join(", ") || "N/A"),
       icon: Calendar,
-      description: weekendComparison >= 0 
-        ? `+${weekendComparison}% vs weekdays` 
-        : `${weekendComparison}% vs weekdays`,
+      description: period === "today"
+        ? `${totalPostsInPeriod > 0 ? "100" : "0"}% of daily target`
+        : (weekendComparison >= 0
+          ? `+${weekendComparison}% vs weekdays`
+          : `${weekendComparison}% vs weekdays`),
     },
   ];
 
@@ -190,7 +198,7 @@ export default function BDLInsights() {
         )}
 
         {/* Insight Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {insightCards.map((card, index) => (
             <Card
               key={card.title}
@@ -233,7 +241,7 @@ export default function BDLInsights() {
                     key={day.date}
                     className="flex items-center gap-4 p-4 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors"
                   >
-                    <div className="w-20 text-sm font-medium text-foreground">{day.date}</div>
+                    <div className="w-20 text-sm font-medium text-foreground">{formatDateLabel(day.date)}</div>
                     <div className="flex-1">
                       <div className="flex gap-1 h-8">
                         {day.posts > 0 && (
@@ -304,7 +312,7 @@ export default function BDLInsights() {
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={timelineData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(35, 25%, 88%)" />
-                    <XAxis dataKey="date" stroke="hsl(20, 20%, 45%)" fontSize={12} />
+                    <XAxis dataKey="date" stroke="hsl(20, 20%, 45%)" fontSize={12} tickFormatter={formatDateLabel} />
                     <YAxis stroke="hsl(20, 20%, 45%)" fontSize={12} />
                     <Tooltip
                       contentStyle={{
@@ -373,43 +381,6 @@ export default function BDLInsights() {
           </Card>
         </div>
 
-        {/* Top Drinks Section */}
-        {topDrinks.length > 0 && (
-          <Card className="hover:shadow-coffee-xl transition-shadow duration-300">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Coffee className="w-5 h-5 text-mocha" />
-                Most Photographed Drinks
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {topDrinks.map((drink, index) => (
-                  <div key={drink.drinkName} className="flex items-center gap-4">
-                    <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-sm font-semibold text-foreground">
-                      {index + 1}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-medium text-foreground">{drink.drinkName}</span>
-                        <span className="text-sm text-muted-foreground">{drink.count} photos</span>
-                      </div>
-                      <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-gradient-to-r from-mocha to-caramel rounded-full transition-all duration-500"
-                          style={{ width: `${drink.percentage}%` }}
-                        />
-                      </div>
-                    </div>
-                    <span className="text-sm font-medium text-muted-foreground w-12 text-right">
-                      {drink.percentage}%
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
       </div>
     </DashboardLayout>
   );
