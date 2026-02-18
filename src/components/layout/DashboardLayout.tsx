@@ -30,7 +30,7 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
   { title: "Dashboard Overview", path: "/dashboard", icon: LayoutDashboard },
-  { title: "BDL Insights", path: "/dashboard/bdl-insights", icon: TrendingUp },
+  // { title: "BDL Insights", path: "/dashboard/bdl-insights", icon: TrendingUp },
   { title: "Stamps & Visits", path: "/dashboard/stamps-visits", icon: Stamp },
   { title: "Café Profile", path: "/dashboard/profile", icon: Store },
   { title: "Events & Promotions", path: "/dashboard/events", icon: Calendar },

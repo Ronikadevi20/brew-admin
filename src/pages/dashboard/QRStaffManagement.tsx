@@ -191,7 +191,7 @@ export default function QRStaffManagement() {
   };
 
   // Handle QR code download
-  const handleDownloadQR = () => {
+  const handleDownloadQR = async () => {
     if (!qrCode) {
       toast({
         title: "No QR Code",
@@ -201,27 +201,82 @@ export default function QRStaffManagement() {
       return;
     }
 
-    // Create download link
-    const link = document.createElement("a");
-    link.href = getUploadUrl(qrCode) || qrCode;
-    link.download = `${myCafe?.name || 'cafe'}-qrcode.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+      const imageUrl = getUploadUrl(qrCode) || qrCode;
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
 
-    toast({
-      title: "Downloading QR code",
-      description: "Your QR code is being downloaded.",
-    });
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `${myCafe?.name || 'cafe'}-qrcode.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+
+      toast({
+        title: "QR code downloaded",
+        description: "Your QR code has been saved.",
+      });
+    } catch {
+      toast({
+        title: "Download failed",
+        description: "Could not download the QR code. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
-  // Handle print
+  // Handle print - prints only the QR code
   const handlePrintQR = () => {
-    toast({
-      title: "Preparing print",
-      description: "Opening print dialog...",
-    });
-    window.print();
+    if (!qrCode) {
+      toast({
+        title: "No QR Code",
+        description: "QR code is not available.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const imageUrl = getUploadUrl(qrCode) || qrCode;
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      toast({
+        title: "Popup blocked",
+        description: "Please allow popups to print the QR code.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>${myCafe?.name || 'Café'} - QR Code</title>
+          <style>
+            body {
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              min-height: 100vh;
+              margin: 0;
+              font-family: Georgia, serif;
+            }
+            img { width: 300px; height: 300px; }
+            h2 { margin-bottom: 8px; }
+            p { color: #666; margin-top: 4px; font-size: 14px; }
+          </style>
+        </head>
+        <body>
+          <h2>${myCafe?.name || 'Café'}</h2>
+          <p>Scan to collect stamps</p>
+          <img src="${imageUrl}" alt="QR Code" onload="window.print(); window.close();" />
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
   };
 
   // Clear redemption result
@@ -553,7 +608,7 @@ export default function QRStaffManagement() {
                   <Download className="w-4 h-4 mr-2" />
                   Download
                 </Button>
-                <Button variant="cream" className="flex-1" onClick={handlePrintQR}>
+                <Button variant="cream" className="flex-1" onClick={handlePrintQR} disabled={!qrCode}>
                   <Printer className="w-4 h-4 mr-2" />
                   Print
                 </Button>

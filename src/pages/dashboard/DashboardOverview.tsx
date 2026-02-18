@@ -47,8 +47,8 @@ export default function DashboardOverview() {
           </div>
 
           {/* Metrics Grid Skeleton */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
-            {[...Array(6)].map((_, i) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+            {[...Array(5)].map((_, i) => (
               <Skeleton key={i} className="h-32 rounded-xl" />
             ))}
           </div>
@@ -108,7 +108,7 @@ export default function DashboardOverview() {
         )}
 
         {/* Metrics Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
           <MetricCard
             title="Total Visits"
             value={metrics.visits.toLocaleString()}
@@ -129,7 +129,7 @@ export default function DashboardOverview() {
             icon={Stamp}
             className="animate-slide-up opacity-0 stagger-2"
           />
-          <MetricCard
+          {/* <MetricCard
             title="BDL Posts"
             value={metrics.bdlPosts.toLocaleString()}
             change={{ 
@@ -138,7 +138,7 @@ export default function DashboardOverview() {
             }}
             icon={Camera}
             className="animate-slide-up opacity-0 stagger-3"
-          />
+          /> */}
           <MetricCard
             title="New Users"
             value={metrics.newUsers.toLocaleString()}
@@ -176,7 +176,7 @@ export default function DashboardOverview() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <BDLVisibilityPieChart data={bdlVisibility} />
+          {/* <BDLVisibilityPieChart data={bdlVisibility} /> */}
           <PeakHoursHeatmap data={peakHours} />
         </div>
       </div>
