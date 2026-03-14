@@ -36,6 +36,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useCafe } from "@/contexts/CafeContext";
 import { eventsService, offersService } from "@/services/events.service";
+import { uploadImage } from "@/services/upload.service";
 import { getUploadUrl } from "@/config/api.config";
 import {
   Calendar,
@@ -253,8 +254,8 @@ export default function EventsPromotions() {
     });
   };
 
-  // Handle image upload
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, isEvent: boolean) => {
+  // Handle image upload - uploads to R2 via backend and stores returned URL
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, isEvent: boolean) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -268,15 +269,18 @@ export default function EventsPromotions() {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
+    try {
+      toast({ title: "Uploading image…", description: "Please wait." });
+      const url = await uploadImage(file, isEvent ? "events" : "offers");
       if (isEvent) {
-        setEventForm(prev => ({ ...prev, imageUrl: reader.result as string }));
+        setEventForm(prev => ({ ...prev, imageUrl: url }));
       } else {
-        setOfferForm(prev => ({ ...prev, imageUrl: reader.result as string }));
+        setOfferForm(prev => ({ ...prev, imageUrl: url }));
       }
-    };
-    reader.readAsDataURL(file);
+      toast({ title: "Image uploaded", description: "Image ready to save." });
+    } catch {
+      toast({ title: "Upload failed", description: "Could not upload image. Please try again.", variant: "destructive" });
+    }
   };
 
   // Create event
@@ -398,7 +402,7 @@ export default function EventsPromotions() {
           endDate: eventForm.endDate ? new Date(eventForm.endDate).toISOString() : undefined,
           location: eventForm.location || undefined,
           capacity: eventForm.capacity,
-          imageUrl: eventForm.imageUrl?.startsWith("data:") ? eventForm.imageUrl : undefined,
+          imageUrl: eventForm.imageUrl || undefined,
         };
         await eventsService.update(editingItem.data.id, data);
         toast({ title: "Event updated!" });
@@ -413,7 +417,7 @@ export default function EventsPromotions() {
           terms: offerForm.terms || undefined,
           maxRedemptions: offerForm.maxRedemptions,
           code: offerForm.code || undefined,
-          imageUrl: offerForm.imageUrl?.startsWith("data:") ? offerForm.imageUrl : undefined,
+          imageUrl: offerForm.imageUrl || undefined,
         };
         await offersService.update(editingItem.data.id, data);
         toast({ title: "Promotion updated!" });

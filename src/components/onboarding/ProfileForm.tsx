@@ -14,6 +14,7 @@ import {
 import { HoursEditor } from "./HoursEditor";
 import { Upload, X, ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { uploadImage } from "@/services/upload.service";
 
 const CITIES = [
   "Karachi",
@@ -54,21 +55,21 @@ export function ProfileForm({ onNext, onSaveDraft, isLoading }: ProfileFormProps
   const [errors, setErrors] = useState<Record<string, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      // Check file size (max 2MB)
-      if (file.size > 2 * 1024 * 1024) {
-        setErrors((prev) => ({ ...prev, logo: "File size must be less than 2MB" }));
-        return;
-      }
-      
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        updateCafe({ logo: reader.result as string });
-        setErrors((prev) => ({ ...prev, logo: "" }));
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setErrors((prev) => ({ ...prev, logo: "File size must be less than 5MB" }));
+      return;
+    }
+
+    try {
+      setErrors((prev) => ({ ...prev, logo: "" }));
+      const url = await uploadImage(file, "cafes");
+      updateCafe({ logo: url });
+    } catch {
+      setErrors((prev) => ({ ...prev, logo: "Failed to upload image. Please try again." }));
     }
   };
 
