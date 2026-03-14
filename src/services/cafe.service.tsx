@@ -32,7 +32,7 @@ function profileToCreateRequest(profile: CafeProfile): CreateCafeRequest {
     email: profile.email || null,
     description: profile.description || null,
 
-    // Image - send base64 directly, backend will handle conversion
+    // Image - R2 URL from upload service (or null if not set)
     imageUrl: profile.logo || null,
 
     // Staff PIN - only send if verification method is 'pin'
@@ -71,10 +71,9 @@ export const cafeService = {
   create: async (profile: CafeProfile): Promise<Cafe> => {
     const requestData = profileToCreateRequest(profile);
     
-    // Log for debugging (without full base64 string)
     console.log('Creating cafe with data:', {
       ...requestData,
-      imageUrl: requestData.imageUrl ? `[base64 image - ${requestData.imageUrl.length} chars]` : null,
+      imageUrl: requestData.imageUrl ? `[image url - ${requestData.imageUrl.substring(0, 60)}...]` : null,
     });
     
     const response = await apiClient.post<CreateCafeResponse>(

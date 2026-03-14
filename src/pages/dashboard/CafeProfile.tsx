@@ -17,6 +17,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useCafe } from "@/contexts/CafeContext";
 import { cafeService } from "@/services/cafe.service";
+import { uploadImage } from "@/services/upload.service";
 import { getUploadUrl } from "@/config/api.config";
 import {
   Store,
@@ -147,12 +148,11 @@ export default function CafeProfile() {
     setHasChanges(true);
   };
 
-  // Handle image upload
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle image upload - sends file to R2 via backend, stores the returned URL
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith("image/")) {
       toast({
         title: "Invalid file type",
@@ -162,7 +162,6 @@ export default function CafeProfile() {
       return;
     }
 
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast({
         title: "File too large",
@@ -172,12 +171,18 @@ export default function CafeProfile() {
       return;
     }
 
-    // Convert to base64
-    const reader = new FileReader();
-    reader.onload = () => {
-      updateProfile({ imageUrl: reader.result as string });
-    };
-    reader.readAsDataURL(file);
+    try {
+      toast({ title: "Uploading image…", description: "Please wait." });
+      const url = await uploadImage(file, "cafes");
+      updateProfile({ imageUrl: url });
+      toast({ title: "Image uploaded", description: "Cafe image updated successfully." });
+    } catch {
+      toast({
+        title: "Upload failed",
+        description: "Could not upload image. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Remove image
@@ -237,8 +242,8 @@ export default function CafeProfile() {
         openingHours: profile.hours.filter(h => !h.isClosed),
       };
 
-      // Only include imageUrl if it's a new base64 image (starts with data:)
-      if (profile.imageUrl && profile.imageUrl.startsWith("data:")) {
+      // Include imageUrl if it's a cloud URL (R2) or base64
+      if (profile.imageUrl) {
         updateData.imageUrl = profile.imageUrl;
       }
 
@@ -339,7 +344,7 @@ export default function CafeProfile() {
                 <div className="w-24 h-24 bg-secondary rounded-2xl flex items-center justify-center border-2 border-dashed border-border overflow-hidden">
                   {profile.imageUrl ? (
                     <img
-                      src={profile.imageUrl.startsWith('data:') ? profile.imageUrl : getUploadUrl(profile.imageUrl) || ''}
+                      src={getUploadUrl(profile.imageUrl) || profile.imageUrl || ''}
                       alt="Cafe logo"
                       className="w-full h-full object-cover"
                     />
