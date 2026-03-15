@@ -100,12 +100,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       // First, perform login to get tokens
       await authService.login({ email, password });
-      
+
       // Then fetch current user to get real-time hasCompletedOnboarding status
       // This is crucial because the login response might have stale data
       const currentUser = await fetchCurrentUser();
-      console.log('User after login with real-time data:', currentUser);
-      
+
+      // Enforce role: only CAFE_ADMIN accounts may access this portal
+      if (currentUser.role !== 'CAFE_ADMIN') {
+        await authService.logout();
+        tokenStorage.clearAllTokens();
+        updateState({ isLoading: false });
+        throw new Error('Access denied. This portal is for café administrators only. Please use the appropriate application.');
+      }
+
       updateState({
         user: currentUser,
         isAuthenticated: true,
