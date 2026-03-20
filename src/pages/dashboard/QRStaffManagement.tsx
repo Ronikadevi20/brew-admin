@@ -845,6 +845,9 @@ export default function QRStaffManagement() {
                   <p className="text-xs text-muted-foreground">
                     Customers need to collect this many stamps to earn their reward (1-20)
                   </p>
+                  <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded px-2 py-1.5">
+                    Changes will apply to new customer cards only. Existing active cards will keep their original stamp requirement.
+                  </p>
                 </div>
 
                 <div className="space-y-2">
