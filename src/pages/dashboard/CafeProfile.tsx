@@ -61,7 +61,7 @@ const defaultHours: OperatingHours[] = daysOfWeek.map((day) => ({
 
 export default function CafeProfile() {
   const { toast } = useToast();
-  const { myCafe, loadMyCafe } = useCafe();
+  const { myCafe, loadMyCafe, isInitialized: isCafeInitialized } = useCafe();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -270,6 +270,23 @@ export default function CafeProfile() {
     }
   };
 
+  // Show skeleton while cafe context is still initializing (prevents "No Cafe Found" flash)
+  if (!isCafeInitialized) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-8 max-w-4xl">
+          <div>
+            <Skeleton className="h-9 w-48 mb-2" />
+            <Skeleton className="h-5 w-72" />
+          </div>
+          <Skeleton className="h-64 rounded-xl" />
+          <Skeleton className="h-48 rounded-xl" />
+          <Skeleton className="h-32 rounded-xl" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   // Loading state
   if (isLoading) {
     return (
@@ -289,8 +306,8 @@ export default function CafeProfile() {
     );
   }
 
-  // Error state (no cafe)
-  if (!myCafe) {
+  // Error state (no cafe) — only show after cafe context has finished initializing
+  if (isCafeInitialized && !myCafe) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-[60vh]">

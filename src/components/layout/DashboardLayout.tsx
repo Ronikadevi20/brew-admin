@@ -139,7 +139,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   Café Admin
                 </h1>
                 <p className="text-xs text-sidebar-foreground/60">
-                  Karachi Coffee Culture
+                  Coffee Culture
                 </p>
               </div>
             </div>
@@ -308,7 +308,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
         {/* Footer */}
         <footer className="border-t border-border py-4 px-6 text-center text-sm text-muted-foreground">
-          Powered by Karachi Coffee Culture Platform
+          Powered by Cravd Loyalty System
         </footer>
       </div>
     </div>

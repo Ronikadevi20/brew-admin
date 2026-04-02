@@ -61,7 +61,7 @@ export default function BDLInsights() {
   const [engagementData, setEngagementData] = useState<BDLEngagementData[]>([]);
   const [peakTimes, setPeakTimes] = useState<BDLPeakTimesData>(defaultPeakTimes);
 
-  const { myCafe } = useCafe();
+  const { myCafe, isInitialized: isCafeInitialized } = useCafe();
 
   // Fetch BDL analytics data
   const fetchBDLData = useCallback(async () => {
@@ -127,6 +127,29 @@ export default function BDLInsights() {
     },
   ];
 
+  // Show skeleton while cafe context is still initializing (prevents "No Cafe Found" flash)
+  if (!isCafeInitialized) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <Skeleton className="h-9 w-48 mb-2" />
+              <Skeleton className="h-5 w-72" />
+            </div>
+            <Skeleton className="h-10 w-48" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[...Array(3)].map((_, i) => (
+              <Skeleton key={i} className="h-32 rounded-xl" />
+            ))}
+          </div>
+          <Skeleton className="h-96 rounded-xl" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   // Loading state
   if (isLoading && timelineData.length === 0) {
     return (
@@ -161,8 +184,8 @@ export default function BDLInsights() {
     );
   }
 
-  // Error state (no cafe)
-  if (error && !myCafe?.id) {
+  // Error state (no cafe) — only show after cafe context has finished initializing
+  if (isCafeInitialized && error && !myCafe?.id) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-[60vh]">

@@ -124,7 +124,7 @@ export default function OnboardingPage() {
                 Café Setup
               </h1>
               <p className="text-xs text-muted-foreground">
-                Karachi Coffee Culture
+                Coffee Culture
               </p>
             </div>
           </div>
@@ -166,7 +166,7 @@ export default function OnboardingPage() {
 
         {/* Footer */}
         <p className="text-center text-sm text-muted-foreground mt-8">
-          Need help? Contact us at support@karachicoffee.com
+          Need help? Contact us at support@hellocravd.com
         </p>
       </main>
 

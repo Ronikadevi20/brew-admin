@@ -90,7 +90,7 @@ export default function LoginPage() {
             <Coffee className="w-10 h-10" />
           </div>
           <h1 className="text-4xl font-serif font-bold mb-4 text-center animate-fade-in stagger-1 opacity-0">
-            Karachi Coffee Culture
+            Coffee Culture
           </h1>
           <p className="text-lg text-primary-foreground/80 text-center max-w-md animate-fade-in stagger-2 opacity-0">
             Manage your café, track customer engagement, and grow your coffee community.
@@ -199,7 +199,7 @@ export default function LoginPage() {
           </div>
 
           <p className="text-center text-sm text-muted-foreground mt-8">
-            Powered by Karachi Coffee Culture Platform
+            Powered by Cravd Loyalty System
           </p>
         </div>
       </div>
