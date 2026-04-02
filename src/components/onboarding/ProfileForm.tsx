@@ -383,7 +383,7 @@ export function ProfileForm({ onNext, onSaveDraft, isLoading }: ProfileFormProps
               <SelectValue placeholder="Select stamps" />
             </SelectTrigger>
             <SelectContent className="bg-popover border-border">
-              {[5, 6, 7, 8, 9, 10].map((num) => (
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
                 <SelectItem key={num} value={String(num)}>
                   {num} stamps
                 </SelectItem>

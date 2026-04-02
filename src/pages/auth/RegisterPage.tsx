@@ -171,7 +171,7 @@ export default function RegisterPage() {
             <Coffee className="w-10 h-10" />
           </div>
           <h1 className="text-4xl font-serif font-bold mb-4 text-center animate-fade-in stagger-1 opacity-0">
-            Join Karachi Coffee Culture
+            Join Coffee Culture
           </h1>
           <p className="text-lg text-primary-foreground/80 text-center max-w-md animate-fade-in stagger-2 opacity-0">
             Register your café and start building your loyal customer community today.
@@ -444,7 +444,7 @@ export default function RegisterPage() {
           </div>
 
           <p className="text-center text-sm text-muted-foreground mt-8">
-            Powered by Karachi Coffee Culture Platform
+            Powered by Cravd Loyalty System
           </p>
         </div>
       </div>

@@ -90,7 +90,7 @@ export default function StampsVisits() {
 
   // console.log(dailyStats);
 
-  const { myCafe } = useCafe();
+  const { myCafe, isInitialized: isCafeInitialized } = useCafe();
 
   // Fetch all data
   const fetchData = useCallback(async () => {
@@ -156,6 +156,32 @@ export default function StampsVisits() {
     return value >= 0 ? "increase" : "decrease";
   };
 
+  // Show skeleton while cafe context is still initializing (prevents "No Cafe Found" flash)
+  if (!isCafeInitialized) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <Skeleton className="h-9 w-48 mb-2" />
+              <Skeleton className="h-5 w-72" />
+            </div>
+            <Skeleton className="h-10 w-48" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[...Array(4)].map((_, i) => (
+              <Skeleton key={i} className="h-32 rounded-xl" />
+            ))}
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Skeleton className="h-80 rounded-xl" />
+            <Skeleton className="h-80 rounded-xl" />
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   // Loading state
   if (isLoading && metrics.stamps === 0) {
     return (
@@ -192,8 +218,8 @@ export default function StampsVisits() {
     );
   }
 
-  // Error state (no cafe)
-  if (error && !myCafe?.id) {
+  // Error state (no cafe) — only show after cafe context has finished initializing
+  if (isCafeInitialized && error && !myCafe?.id) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-[60vh]">

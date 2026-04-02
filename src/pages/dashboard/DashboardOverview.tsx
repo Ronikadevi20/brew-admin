@@ -14,7 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function DashboardOverview() {
-  const { myCafe } = useCafe();
+  const { myCafe, isInitialized: isCafeInitialized } = useCafe();
   const {
     period,
     setPeriod,
@@ -31,6 +31,32 @@ export default function DashboardOverview() {
   const getChangeType = (value: number): "increase" | "decrease" => {
     return value >= 0 ? "increase" : "decrease";
   };
+
+  // Show skeleton while cafe context is still initializing (prevents "No Cafe Found" flash)
+  if (!isCafeInitialized) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <Skeleton className="h-9 w-64 mb-2" />
+              <Skeleton className="h-5 w-96" />
+            </div>
+            <Skeleton className="h-10 w-48" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+            {[...Array(5)].map((_, i) => (
+              <Skeleton key={i} className="h-32 rounded-xl" />
+            ))}
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Skeleton className="h-80 rounded-xl" />
+            <Skeleton className="h-80 rounded-xl" />
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   // Render loading skeletons
   if (isLoading && !metrics.visits) {
@@ -67,8 +93,8 @@ export default function DashboardOverview() {
     );
   }
 
-  // Render error state
-  if (error && !myCafe?.id) {
+  // Render error state (only after cafe context has finished initializing)
+  if (isCafeInitialized && error && !myCafe?.id) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-[60vh]">

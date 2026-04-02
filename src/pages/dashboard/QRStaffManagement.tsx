@@ -54,7 +54,7 @@ import type { PinActivityData, PinScan, RewardRedemptionResult } from "@/types/c
 
 export default function QRStaffManagement() {
   const { toast } = useToast();
-  const { myCafe } = useCafe();
+  const { myCafe, isInitialized: isCafeInitialized } = useCafe();
   
   // State
   const [isLoading, setIsLoading] = useState(true);
@@ -201,19 +201,39 @@ export default function QRStaffManagement() {
       return;
     }
 
+    const safeName = (myCafe?.name || "cafe")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+    const filename = `cravd-qr-${safeName}.png`;
+
     try {
       const imageUrl = getUploadUrl(qrCode) || qrCode;
-      const response = await fetch(imageUrl);
-      const blob = await response.blob();
-      const blobUrl = URL.createObjectURL(blob);
 
-      const link = document.createElement("a");
-      link.href = blobUrl;
-      link.download = `${myCafe?.name || 'cafe'}-qrcode.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(blobUrl);
+      // If the value is already a data URL (base64), download it directly
+      if (imageUrl.startsWith("data:")) {
+        const link = document.createElement("a");
+        link.href = imageUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        // Fetch the image as a blob so the browser triggers a real download
+        // (plain <a download> on cross-origin URLs is blocked by browsers)
+        const response = await fetch(imageUrl);
+        if (!response.ok) throw new Error("Network response was not ok");
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+      }
 
       toast({
         title: "QR code downloaded",
@@ -351,10 +371,10 @@ export default function QRStaffManagement() {
     if (!myCafe?.id) return;
 
     // Validation
-    if (stampsRequired < 1 || stampsRequired > 20) {
+    if (stampsRequired < 1 || stampsRequired > 10) {
       toast({
         title: "Invalid stamps required",
-        description: "Stamps required must be between 1 and 20.",
+        description: "Stamps required must be between 1 and 10.",
         variant: "destructive",
       });
       return;
@@ -400,8 +420,8 @@ export default function QRStaffManagement() {
     return date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
   };
 
-  // Loading state
-  if (isLoading) {
+  // Loading state — show skeleton while cafe context is initializing OR local data is loading
+  if (!isCafeInitialized || isLoading) {
     return (
       <DashboardLayout>
         <div className="space-y-8">
@@ -421,8 +441,8 @@ export default function QRStaffManagement() {
     );
   }
 
-  // No cafe error
-  if (!myCafe) {
+  // No cafe error (only show after cafe context has finished initializing)
+  if (isCafeInitialized && !myCafe) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-[60vh]">
@@ -835,7 +855,7 @@ export default function QRStaffManagement() {
                       id="stamps-required"
                       type="number"
                       min={1}
-                      max={20}
+                      max={10}
                       value={stampsRequired}
                       onChange={(e) => handleSettingsChange('stampsRequired', parseInt(e.target.value) || 1)}
                       className="w-24 text-center text-xl font-bold"
@@ -843,7 +863,7 @@ export default function QRStaffManagement() {
                     <span className="text-muted-foreground">stamps = 1 reward</span>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Customers need to collect this many stamps to earn their reward (1-20)
+                    Customers need to collect this many stamps to earn their reward (1-10)
                   </p>
                   <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded px-2 py-1.5">
                     Changes will apply to new customer cards only. Existing active cards will keep their original stamp requirement.

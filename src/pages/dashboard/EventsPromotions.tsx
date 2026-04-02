@@ -119,6 +119,23 @@ const getOfferIcon = (discountType: DiscountType) => {
   }
 };
 
+// Returns current datetime in "YYYY-MM-DDTHH:mm" format for datetime-local min attribute
+const getNowDatetimeLocal = (): string => new Date().toISOString().slice(0, 16);
+
+// Converts any ISO date string (e.g. "2026-01-15T10:00:00.000Z") to datetime-local format ("YYYY-MM-DDTHH:mm")
+const toDatetimeLocal = (isoString: string): string => {
+  if (!isoString) return "";
+  try {
+    const date = new Date(isoString);
+    if (isNaN(date.getTime())) return "";
+    // Convert to local time by adjusting for timezone offset
+    const offset = date.getTimezoneOffset() * 60000;
+    return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+  } catch {
+    return "";
+  }
+};
+
 // Format date for display
 const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
@@ -149,7 +166,7 @@ type CombinedItem =
 
 export default function EventsPromotions() {
   const { toast } = useToast();
-  const { myCafe } = useCafe();
+  const { myCafe, isInitialized: isCafeInitialized } = useCafe();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // State
@@ -292,6 +309,23 @@ export default function EventsPromotions() {
       return;
     }
 
+    const now = new Date();
+    const startDate = new Date(eventForm.startDate!);
+    const endDate = new Date(eventForm.endDate!);
+
+    if (startDate < now) {
+      toast({ title: "Invalid start date", description: "Start date cannot be in the past. Please select a present or future date.", variant: "destructive" });
+      return;
+    }
+    if (endDate < now) {
+      toast({ title: "Invalid end date", description: "End date cannot be in the past. Please select a present or future date.", variant: "destructive" });
+      return;
+    }
+    if (endDate <= startDate) {
+      toast({ title: "Invalid date range", description: "End date must be after the start date.", variant: "destructive" });
+      return;
+    }
+
     setIsSaving(true);
     try {
       const data: CreateEventRequest = {
@@ -324,6 +358,23 @@ export default function EventsPromotions() {
 
     if (!offerForm.title || !offerForm.description || !offerForm.startDate || !offerForm.endDate) {
       toast({ title: "Missing fields", description: "Please fill required fields", variant: "destructive" });
+      return;
+    }
+
+    const now = new Date();
+    const startDate = new Date(offerForm.startDate!);
+    const endDate = new Date(offerForm.endDate!);
+
+    if (startDate < now) {
+      toast({ title: "Invalid start date", description: "Start date cannot be in the past. Please select a present or future date.", variant: "destructive" });
+      return;
+    }
+    if (endDate < now) {
+      toast({ title: "Invalid end date", description: "End date cannot be in the past. Please select a present or future date.", variant: "destructive" });
+      return;
+    }
+    if (endDate <= startDate) {
+      toast({ title: "Invalid date range", description: "End date must be after the start date.", variant: "destructive" });
       return;
     }
 
@@ -364,8 +415,8 @@ export default function EventsPromotions() {
         title: event.title,
         description: event.description,
         eventType: event.eventType,
-        startDate: event.startDate.slice(0, 16),
-        endDate: event.endDate.slice(0, 16),
+        startDate: toDatetimeLocal(event.startDate),
+        endDate: toDatetimeLocal(event.endDate),
         location: event.location || "",
         capacity: event.capacity,
         imageUrl: event.imageUrl || "",
@@ -377,8 +428,8 @@ export default function EventsPromotions() {
         description: offer.description,
         discountType: offer.discountType,
         discountValue: offer.discountValue,
-        startDate: offer.startDate.slice(0, 16),
-        endDate: offer.endDate.slice(0, 16),
+        startDate: toDatetimeLocal(offer.startDate),
+        endDate: toDatetimeLocal(offer.endDate),
         terms: offer.terms || "",
         maxRedemptions: offer.maxRedemptions,
         code: offer.code || "",
@@ -390,6 +441,27 @@ export default function EventsPromotions() {
 
   const handleUpdate = async () => {
     if (!editingItem) return;
+
+    // Validate date range (no past-date block on edits — allow editing historical events)
+    if (editingItem.type === "event") {
+      if (eventForm.startDate && eventForm.endDate) {
+        const start = new Date(eventForm.startDate);
+        const end = new Date(eventForm.endDate);
+        if (end <= start) {
+          toast({ title: "Invalid date range", description: "End date must be after the start date.", variant: "destructive" });
+          return;
+        }
+      }
+    } else {
+      if (offerForm.startDate && offerForm.endDate) {
+        const start = new Date(offerForm.startDate);
+        const end = new Date(offerForm.endDate);
+        if (end <= start) {
+          toast({ title: "Invalid date range", description: "End date must be after the start date.", variant: "destructive" });
+          return;
+        }
+      }
+    }
 
     setIsSaving(true);
     try {
@@ -429,7 +501,8 @@ export default function EventsPromotions() {
       resetOfferForm();
       loadData();
     } catch (err: any) {
-      toast({ title: "Error", description: err.response?.data?.message || "Failed to update", variant: "destructive" });
+      const message = err.response?.data?.message || err.message || "Failed to save changes. Please check your inputs and try again.";
+      toast({ title: "Could not save changes", description: message, variant: "destructive" });
     } finally {
       setIsSaving(false);
     }
@@ -474,6 +547,28 @@ export default function EventsPromotions() {
     return dateB.getTime() - dateA.getTime();
   });
 
+  // Show skeleton while cafe context is still initializing (prevents "No Cafe Found" flash)
+  if (!isCafeInitialized) {
+    return (
+      <DashboardLayout>
+        <div className="space-y-8">
+          <div className="flex justify-between">
+            <div>
+              <Skeleton className="h-9 w-64 mb-2" />
+              <Skeleton className="h-5 w-96" />
+            </div>
+            <Skeleton className="h-10 w-32" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {[...Array(4)].map((_, i) => (
+              <Skeleton key={i} className="h-80 rounded-xl" />
+            ))}
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   // Loading state
   if (isLoading) {
     return (
@@ -496,8 +591,8 @@ export default function EventsPromotions() {
     );
   }
 
-  // Error state (no cafe)
-  if (!myCafe) {
+  // Error state (no cafe) — only show after cafe context has finished initializing
+  if (isCafeInitialized && !myCafe) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-[60vh]">
@@ -598,6 +693,7 @@ export default function EventsPromotions() {
                         <Input
                           type="datetime-local"
                           value={eventForm.startDate}
+                          min={getNowDatetimeLocal()}
                           onChange={(e) => setEventForm({ ...eventForm, startDate: e.target.value })}
                         />
                       </div>
@@ -606,6 +702,7 @@ export default function EventsPromotions() {
                         <Input
                           type="datetime-local"
                           value={eventForm.endDate}
+                          min={getNowDatetimeLocal()}
                           onChange={(e) => setEventForm({ ...eventForm, endDate: e.target.value })}
                         />
                       </div>
@@ -723,6 +820,7 @@ export default function EventsPromotions() {
                         <Input
                           type="datetime-local"
                           value={offerForm.startDate}
+                          min={getNowDatetimeLocal()}
                           onChange={(e) => setOfferForm({ ...offerForm, startDate: e.target.value })}
                         />
                       </div>
@@ -731,6 +829,7 @@ export default function EventsPromotions() {
                         <Input
                           type="datetime-local"
                           value={offerForm.endDate}
+                          min={getNowDatetimeLocal()}
                           onChange={(e) => setOfferForm({ ...offerForm, endDate: e.target.value })}
                         />
                       </div>

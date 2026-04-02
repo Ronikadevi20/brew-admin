@@ -128,7 +128,7 @@ export default function ForgotPasswordPage() {
         </div>
 
         <p className="text-center text-sm text-muted-foreground mt-8">
-          Powered by Karachi Coffee Culture Platform
+          Powered by Cravd Loyalty System
         </p>
       </div>
     </div>
