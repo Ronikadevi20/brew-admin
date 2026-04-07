@@ -44,7 +44,7 @@ export function QRScanner({ onScan, onError, isOpen, onClose }: QRScannerProps) 
         }
       } catch (err) {
         // Ignore errors during stop - element may already be removed
-        console.warn("Error stopping scanner:", err);
+        // console.warn("Error stopping scanner:", err);
       }
 
       // Clear the container safely
@@ -165,7 +165,7 @@ export function QRScanner({ onScan, onError, isOpen, onClose }: QRScannerProps) 
         setIsScanning(true);
       }
     } catch (err: any) {
-      console.error("Error starting scanner:", err);
+      // console.error("Error starting scanner:", err);
 
       if (!isMountedRef.current) {
         isStartingRef.current = false;

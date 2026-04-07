@@ -27,6 +27,7 @@ import { useCafe } from "@/contexts/CafeContext";
 import { cafeAdminService } from "@/services/cafeadmin.service";
 import { cafeService } from "@/services/cafe.service";
 import { getUploadUrl, API_BASE_URL } from "@/config/api.config";
+import { tokenStorage } from "@/lib/token-storage";
 import { Textarea } from "@/components/ui/textarea";
 import { QRScanner } from "@/components/ui/qr-scanner";
 import {
@@ -115,7 +116,7 @@ export default function QRStaffManagement() {
         setPinActivity(activityData);
       }
     } catch (err: any) {
-      console.error("Failed to load data:", err);
+      // console.error("Failed to load data:", err);
       // Don't set error for dashboard - just use cafe data
       setCurrentPin(myCafe.staffPin || null);
       setQrCode(myCafe.qrCode);
@@ -219,9 +220,12 @@ export default function QRStaffManagement() {
         link.click();
         document.body.removeChild(link);
       } else {
-        // Fetch the image as a blob so the browser triggers a real download
-        // (plain <a download> on cross-origin URLs is blocked by browsers)
-        const response = await fetch(imageUrl);
+        // Proxy through our backend to avoid CORS blocks on cross-origin R2 URLs
+        const proxyUrl = `${API_BASE_URL}/api/v1/upload/proxy-image?url=${encodeURIComponent(imageUrl)}`;
+        const token = tokenStorage.getAccessToken();
+        const response = await fetch(proxyUrl, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
         if (!response.ok) throw new Error("Network response was not ok");
         const blob = await response.blob();
         const blobUrl = URL.createObjectURL(blob);

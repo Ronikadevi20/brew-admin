@@ -130,7 +130,7 @@ export default function CafeProfile() {
 
       setError(null);
     } catch (err: any) {
-      console.error("Failed to load cafe data:", err);
+      // console.error("Failed to load cafe data:", err);
       setError("Failed to load cafe profile");
     } finally {
       setIsLoading(false);
@@ -259,7 +259,7 @@ export default function CafeProfile() {
 
       setHasChanges(false);
     } catch (err: any) {
-      console.error("Failed to save profile:", err);
+      // console.error("Failed to save profile:", err);
       toast({
         title: "Error",
         description: err.response?.data?.message || "Failed to save profile. Please try again.",

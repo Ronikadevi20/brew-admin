@@ -74,7 +74,7 @@ export const authService = {
       await apiClient.post(API_ENDPOINTS.AUTH.LOGOUT);
     } catch (error) {
       // Even if logout API fails, clear local tokens
-      console.error('Logout API error:', error);
+      // console.error('Logout API error:', error);
     } finally {
       // Always clear tokens locally
       tokenStorage.clearAllTokens();

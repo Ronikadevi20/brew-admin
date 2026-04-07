@@ -57,7 +57,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       const stats = await notificationsService.getStats();
       setUnreadCount(stats.unread);
     } catch (error) {
-      console.error("Failed to fetch notification stats:", error);
+      // console.error("Failed to fetch notification stats:", error);
     }
   }, []);
 
@@ -67,7 +67,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       const result = await notificationsService.getNotifications(1, 10);
       setNotifications(result.data);
     } catch (error) {
-      console.error("Failed to fetch notifications:", error);
+      // console.error("Failed to fetch notifications:", error);
     }
   }, []);
 
@@ -91,7 +91,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       setUnreadCount(0);
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
     } catch (error) {
-      console.error("Failed to mark all as read:", error);
+      // console.error("Failed to mark all as read:", error);
     }
   };
 

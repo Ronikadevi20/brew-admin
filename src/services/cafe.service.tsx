@@ -71,10 +71,10 @@ export const cafeService = {
   create: async (profile: CafeProfile): Promise<Cafe> => {
     const requestData = profileToCreateRequest(profile);
     
-    console.log('Creating cafe with data:', {
-      ...requestData,
-      imageUrl: requestData.imageUrl ? `[image url - ${requestData.imageUrl.substring(0, 60)}...]` : null,
-    });
+    // console.log('Creating cafe with data:', {
+    //   ...requestData,
+    //   imageUrl: requestData.imageUrl ? `[image url - ${requestData.imageUrl.substring(0, 60)}...]` : null,
+    // });
     
     const response = await apiClient.post<CreateCafeResponse>(
       API_ENDPOINTS.CAFES.BASE,

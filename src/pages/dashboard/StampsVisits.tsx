@@ -124,14 +124,14 @@ export default function StampsVisits() {
       setFunnelData(funnel);
       setDailyStats(daily);
     } catch (err: any) {
-      console.error("Failed to fetch stamps & visits data:", err);
+      // console.error("Failed to fetch stamps & visits data:", err);
       setError(err.response?.data?.message || "Failed to load analytics data");
     } finally {
       setIsLoading(false);
     }
   }, [myCafe?.id, period]);
 
-  console.log(metrics)
+  // console.log(metrics)
 
   // Fetch data on mount and when period changes
   useEffect(() => {
@@ -233,7 +233,7 @@ export default function StampsVisits() {
     );
   }
 
-  console.log('red', metrics.redemptions)
+  // console.log('red', metrics.redemptions)
 
   return (
     <DashboardLayout>

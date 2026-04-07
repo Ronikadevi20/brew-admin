@@ -72,7 +72,7 @@ export default function OnboardingPage() {
       // For cafe admins, check account status
       // If PENDING, show the approval dialog; otherwise navigate to dashboard
       if (freshUser?.role === 'CAFE_ADMIN' && freshUser?.accountStatus === 'PENDING') {
-        console.log('User is pending approval:', freshUser);
+        // console.log('User is pending approval:', freshUser);
         setPendingUser(freshUser);
         setShowApprovalPending(true);
       } else {
@@ -80,7 +80,7 @@ export default function OnboardingPage() {
         navigate('/dashboard');
       }
     } catch (error: any) {
-      console.error('Onboarding error:', error);
+      // console.error('Onboarding error:', error);
 
       // Extract error message from response
       let errorMessage = "Failed to complete setup. Please try again.";
