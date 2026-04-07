@@ -135,7 +135,7 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
       setBdlVisibility(bdlData);
       setPeakHours(peakHoursData);
     } catch (err: any) {
-      console.error('Failed to fetch dashboard data:', err);
+      // console.error('Failed to fetch dashboard data:', err);
       setError(err.response?.data?.message || 'Failed to load dashboard data');
     } finally {
       setIsLoading(false);

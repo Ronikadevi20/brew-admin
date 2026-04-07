@@ -231,7 +231,7 @@ export default function EventsPromotions() {
       setEvents(eventsRes.data || []);
       setOffers(offersRes.data || []);
     } catch (err: any) {
-      console.error("Failed to load events/offers:", err);
+      // console.error("Failed to load events/offers:", err);
       setError(err.response?.data?.message || "Failed to load data");
     } finally {
       setIsLoading(false);

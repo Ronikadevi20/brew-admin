@@ -43,10 +43,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const fetchCurrentUser = useCallback(async () => {
     try {
       const user = await authService.getCurrentUser();
-      console.log('Fetched current user:', user);
+      // console.log('Fetched current user:', user);
       return user;
     } catch (error) {
-      console.error('Failed to fetch current user:', error);
+      // console.error('Failed to fetch current user:', error);
       throw error;
     }
   }, []);
@@ -77,7 +77,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         });
       } catch (error) {
         // Session expired or invalid
-        console.warn('Session restoration failed:', error);
+        // console.warn('Session restoration failed:', error);
         tokenStorage.clearAllTokens();
         updateState({
           user: null,
@@ -136,7 +136,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       // Then fetch current user to get real-time data
       const currentUser = await fetchCurrentUser();
-      console.log('User after register:', currentUser);
+      // console.log('User after register:', currentUser);
       
       updateState({
         user: currentUser,
@@ -216,7 +216,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const user = await fetchCurrentUser();
       updateState({ user, isAuthenticated: true });
     } catch (error) {
-      console.warn('Auth refresh failed:', error);
+      // console.warn('Auth refresh failed:', error);
       tokenStorage.clearAllTokens();
       updateState({ user: null, isAuthenticated: false });
     }

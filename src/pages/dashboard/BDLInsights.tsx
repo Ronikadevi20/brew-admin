@@ -85,7 +85,7 @@ export default function BDLInsights() {
       setEngagementData(engagement);
       setPeakTimes(peak);
     } catch (err: any) {
-      console.error("Failed to fetch BDL data:", err);
+      // console.error("Failed to fetch BDL data:", err);
       setError(err.response?.data?.message || "Failed to load BDL analytics");
     } finally {
       setIsLoading(false);

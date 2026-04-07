@@ -43,7 +43,7 @@ function loadDraft(): CafeProfile | null {
       return { ...defaultCafeProfile, ...JSON.parse(saved) };
     }
   } catch {
-    console.warn('Failed to load cafe draft');
+    // console.warn('Failed to load cafe draft');
   }
   return null;
 }
@@ -55,7 +55,7 @@ function saveDraftToStorage(profile: CafeProfile): void {
   try {
     sessionStorage.setItem(CAFE_DRAFT_KEY, JSON.stringify(profile));
   } catch {
-    console.warn('Failed to save cafe draft');
+    // console.warn('Failed to save cafe draft');
   }
 }
 
@@ -66,7 +66,7 @@ function clearDraftFromStorage(): void {
   try {
     sessionStorage.removeItem(CAFE_DRAFT_KEY);
   } catch {
-    console.warn('Failed to clear cafe draft');
+    // console.warn('Failed to clear cafe draft');
   }
 }
 
@@ -131,11 +131,11 @@ export function CafeProvider({ children }: CafeProviderProps) {
       
       return true;
     } catch (error: any) {
-      console.error('Failed to create cafe:', error);
+      // console.error('Failed to create cafe:', error);
       
       // Log detailed error for debugging
       if (error.response?.data) {
-        console.error('Server error details:', error.response.data);
+        // console.error('Server error details:', error.response.data);
       }
       
       // Re-throw the error so the UI can handle it
@@ -163,9 +163,9 @@ export function CafeProvider({ children }: CafeProviderProps) {
     setIsLoading(true);
     
     try {
-      console.log('Loading my cafe from API...');
+      // console.log('Loading my cafe from API...');
       const cafeData = await cafeService.getMyCafe();
-      console.log('Loaded cafe:', cafeData);
+      // console.log('Loaded cafe:', cafeData);
       
       setMyCafe(cafeData);
       
@@ -188,10 +188,10 @@ export function CafeProvider({ children }: CafeProviderProps) {
       
       setIsInitialized(true);
     } catch (error: any) {
-      console.error('Failed to load cafe:', error);
+      // console.error('Failed to load cafe:', error);
       // If cafe not found, user might not have completed onboarding properly
       if (error.response?.status === 404) {
-        console.warn('No cafe found for user');
+        // console.warn('No cafe found for user');
       }
       setIsInitialized(true);
     } finally {
