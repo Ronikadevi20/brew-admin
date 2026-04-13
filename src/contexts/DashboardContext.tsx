@@ -22,6 +22,9 @@ import type {
   ChartData,
   BDLVisibilityData,
   PeakHoursHeatmapData,
+  RepeatRateTrendPoint,
+  VisitGapBucket,
+  LoyaltyProgressStage,
 } from '@/types/analytics.types';
 
 // Default empty metrics
@@ -35,6 +38,10 @@ const defaultMetrics: DashboardMetrics = {
   redemptions: 0,
   avgStampsPerUser: 0,
   uniqueVisitors: 0,
+  repeatCustomerRate: 0,
+  activeCustomers: 0,
+  rewardCompletionRate: 0,
+  freeDrinksRedeemed: 0,
   changes: {
     visits: 0,
     stamps: 0,
@@ -43,6 +50,8 @@ const defaultMetrics: DashboardMetrics = {
     avgFrequency: 0,
     redemptions: 0,
     avgStampsPerUser: 0,
+    repeatCustomerRate: 0,
+    rewardCompletionRate: 0,
   },
 };
 
@@ -74,9 +83,12 @@ interface DashboardContextType {
   stampsData: ChartData;
   bdlVisibility: BDLVisibilityData;
   peakHours: PeakHoursHeatmapData;
+  repeatRateTrend: RepeatRateTrendPoint[];
+  visitGapDistribution: VisitGapBucket[];
+  loyaltyProgress: LoyaltyProgressStage[];
   isLoading: boolean;
   error: string | null;
-  
+
   // Actions
   setPeriod: (period: DashboardPeriod) => void;
   refreshData: () => Promise<void>;
@@ -98,6 +110,9 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
   const [stampsData, setStampsData] = useState<ChartData>(defaultChartData);
   const [bdlVisibility, setBdlVisibility] = useState<BDLVisibilityData>(defaultBDLVisibility);
   const [peakHours, setPeakHours] = useState<PeakHoursHeatmapData>(defaultPeakHours);
+  const [repeatRateTrend, setRepeatRateTrend] = useState<RepeatRateTrendPoint[]>([]);
+  const [visitGapDistribution, setVisitGapDistribution] = useState<VisitGapBucket[]>([]);
+  const [loyaltyProgress, setLoyaltyProgress] = useState<LoyaltyProgressStage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -121,12 +136,18 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
         stampsChartData,
         bdlData,
         peakHoursData,
+        repeatRateTrendData,
+        visitGapData,
+        loyaltyProgressData,
       ] = await Promise.all([
         analyticsService.getDashboardMetrics(myCafe.id, period),
         analyticsService.getVisitsChart(myCafe.id, period),
         analyticsService.getStampsChart(myCafe.id, period),
         analyticsService.getBDLVisibility(myCafe.id, period),
         analyticsService.getPeakHoursHeatmap(myCafe.id, period === 'today' ? 'week' : period),
+        analyticsService.getRepeatRateTrend(myCafe.id, period),
+        analyticsService.getVisitGapDistribution(myCafe.id, period),
+        analyticsService.getLoyaltyProgressDistribution(myCafe.id, period),
       ]);
 
       setMetrics(metricsData);
@@ -134,6 +155,9 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
       setStampsData(stampsChartData);
       setBdlVisibility(bdlData);
       setPeakHours(peakHoursData);
+      setRepeatRateTrend(repeatRateTrendData);
+      setVisitGapDistribution(visitGapData);
+      setLoyaltyProgress(loyaltyProgressData);
     } catch (err: any) {
       // console.error('Failed to fetch dashboard data:', err);
       setError(err.response?.data?.message || 'Failed to load dashboard data');
@@ -167,6 +191,9 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
       stampsData,
       bdlVisibility,
       peakHours,
+      repeatRateTrend,
+      visitGapDistribution,
+      loyaltyProgress,
       isLoading,
       error,
       setPeriod,
@@ -179,6 +206,9 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
       stampsData,
       bdlVisibility,
       peakHours,
+      repeatRateTrend,
+      visitGapDistribution,
+      loyaltyProgress,
       isLoading,
       error,
       refreshData,
