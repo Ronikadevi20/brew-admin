@@ -25,6 +25,10 @@ export interface DashboardMetrics {
   redemptions: number;
   avgStampsPerUser: number;
   uniqueVisitors: number;
+  repeatCustomerRate: number;
+  activeCustomers: number;
+  rewardCompletionRate: number;
+  freeDrinksRedeemed: number;
   changes: {
     visits: number;
     stamps: number;
@@ -33,7 +37,29 @@ export interface DashboardMetrics {
     avgFrequency: number;
     redemptions: number;
     avgStampsPerUser: number;
+    repeatCustomerRate: number;
+    rewardCompletionRate: number;
   };
+}
+
+// Repeat rate trend data point
+export interface RepeatRateTrendPoint {
+  date: string;
+  repeatRate: number;
+  totalCustomers: number;
+  returningCustomers: number;
+}
+
+// Visit gap bucket
+export interface VisitGapBucket {
+  bucket: string;
+  customers: number;
+}
+
+// Loyalty progress stage
+export interface LoyaltyProgressStage {
+  stage: string;
+  customers: number;
 }
 
 // Chart data structure

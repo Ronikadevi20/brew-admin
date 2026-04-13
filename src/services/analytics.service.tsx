@@ -32,6 +32,9 @@ import type {
   CustomerTypeData,
   DailyStatistics,
   StampsByDrinkData,
+  RepeatRateTrendPoint,
+  VisitGapBucket,
+  LoyaltyProgressStage,
 } from '@/types/analytics.types';
 
 /**
@@ -329,6 +332,48 @@ export const analyticsService = {
     const response = await apiClient.get<{ success: boolean; data: StampsByDrinkData[] }>(
       API_ENDPOINTS.ANALYTICS.DASHBOARD.STAMPS_BY_DRINK(cafeId),
       { params: { period, limit } }
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Get repeat rate trend data
+   */
+  getRepeatRateTrend: async (
+    cafeId: string,
+    period: DashboardPeriod = 'week'
+  ): Promise<RepeatRateTrendPoint[]> => {
+    const response = await apiClient.get<{ success: boolean; data: RepeatRateTrendPoint[] }>(
+      API_ENDPOINTS.ANALYTICS.DASHBOARD.REPEAT_RATE_TREND(cafeId),
+      { params: { period } }
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Get visit gap distribution
+   */
+  getVisitGapDistribution: async (
+    cafeId: string,
+    period: DashboardPeriod = 'week'
+  ): Promise<VisitGapBucket[]> => {
+    const response = await apiClient.get<{ success: boolean; data: VisitGapBucket[] }>(
+      API_ENDPOINTS.ANALYTICS.DASHBOARD.VISIT_GAP_DISTRIBUTION(cafeId),
+      { params: { period } }
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Get loyalty progress distribution
+   */
+  getLoyaltyProgressDistribution: async (
+    cafeId: string,
+    period: DashboardPeriod = 'week'
+  ): Promise<LoyaltyProgressStage[]> => {
+    const response = await apiClient.get<{ success: boolean; data: LoyaltyProgressStage[] }>(
+      API_ENDPOINTS.ANALYTICS.DASHBOARD.LOYALTY_PROGRESS(cafeId),
+      { params: { period } }
     );
     return response.data.data;
   },

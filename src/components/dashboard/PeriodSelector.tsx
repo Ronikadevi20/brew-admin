@@ -8,8 +8,8 @@ interface PeriodSelectorProps {
 export function PeriodSelector({ value, onChange }: PeriodSelectorProps) {
   const periods = [
     { id: "today" as const, label: "Today" },
-    { id: "week" as const, label: "This Week" },
-    { id: "month" as const, label: "This Month" },
+    { id: "week" as const, label: "Last 7 Days" },
+    { id: "month" as const, label: "Last 30 Days" },
   ];
 
   return (

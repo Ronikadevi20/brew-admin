@@ -60,6 +60,9 @@ export const API_ENDPOINTS = {
       CUSTOMER_TYPE: (cafeId: string) => `/analytics/dashboard/${cafeId}/customer-type`,
       DAILY_STATISTICS: (cafeId: string) => `/analytics/dashboard/${cafeId}/daily-statistics`,
       STAMPS_BY_DRINK: (cafeId: string) => `/analytics/dashboard/${cafeId}/stamps-by-drink`,
+      REPEAT_RATE_TREND: (cafeId: string) => `/analytics/dashboard/${cafeId}/repeat-rate-trend`,
+      VISIT_GAP_DISTRIBUTION: (cafeId: string) => `/analytics/dashboard/${cafeId}/visit-gap-distribution`,
+      LOYALTY_PROGRESS: (cafeId: string) => `/analytics/dashboard/${cafeId}/loyalty-progress`,
     },
   },
   NOTIFICATIONS: {
