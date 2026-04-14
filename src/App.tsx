@@ -22,6 +22,7 @@ import OnboardingPage from "./pages/onboarding/OnboardingPage";
 import DashboardOverview from "./pages/dashboard/DashboardOverview";
 import BDLInsights from "./pages/dashboard/BDLInsights";
 import StampsVisits from "./pages/dashboard/StampsVisits";
+import CustomerInsights from "./pages/dashboard/CustomerInsights";
 import CafeProfile from "./pages/dashboard/CafeProfile";
 import EventsPromotions from "./pages/dashboard/EventsPromotions";
 import QRStaffManagement from "./pages/dashboard/QRStaffManagement";
@@ -224,6 +225,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute withDashboardProvider>
             <StampsVisits />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/customer-insights"
+        element={
+          <ProtectedRoute withDashboardProvider>
+            <CustomerInsights />
           </ProtectedRoute>
         }
       />

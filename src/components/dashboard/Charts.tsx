@@ -15,6 +15,7 @@ import {
   Legend,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowRight } from "lucide-react";
 import type {
   ChartData,
   BDLVisibilityData,
@@ -23,10 +24,11 @@ import type {
   RepeatRateTrendPoint,
   VisitGapBucket,
   LoyaltyProgressStage,
+  EngagementJourneyStep,
 } from "@/types/analytics.types";
 
 // Re-export types for consumers
-export type { ChartData, BDLVisibilityData, PeakHoursHeatmapData };
+export type { ChartData, BDLVisibilityData, PeakHoursHeatmapData, EngagementJourneyStep };
 
 const chartColors = {
   primary: "hsl(20, 35%, 40%)",
@@ -303,6 +305,86 @@ export function VisitGapDistributionChart({ data, className }: VisitGapDistribut
 interface LoyaltyProgressDistributionChartProps {
   data?: LoyaltyProgressStage[] | null;
   className?: string;
+}
+
+// Engagement Journey Chart (Stamp-to-Reward Funnel)
+interface EngagementJourneyChartProps {
+  data?: EngagementJourneyStep[] | null;
+  className?: string;
+}
+
+export function EngagementJourneyChart({ data, className }: EngagementJourneyChartProps) {
+  const hasData = data && data.length > 0 && data.some((s) => s.count > 0);
+
+  return (
+    <Card className={`hover:shadow-coffee-xl transition-shadow duration-300 ${className || ""}`}>
+      <CardHeader>
+        <CardTitle>Stamp-to-Reward Journey</CardTitle>
+        <p className="text-sm text-muted-foreground">
+          All-time — how customers move through your loyalty ecosystem
+        </p>
+      </CardHeader>
+      <CardContent>
+        {!hasData ? (
+          <div className="h-[200px] flex items-center justify-center text-muted-foreground">
+            No engagement data available yet
+          </div>
+        ) : (
+          <div className="space-y-5">
+            <ResponsiveContainer width="100%" height={180}>
+              <BarChart data={data!} margin={{ top: 0, right: 8, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(35, 25%, 88%)" />
+                <XAxis dataKey="stage" stroke="hsl(20, 20%, 45%)" fontSize={10} />
+                <YAxis stroke="hsl(20, 20%, 45%)" fontSize={11} allowDecimals={false} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "hsl(0, 0%, 100%)",
+                    border: "1px solid hsl(35, 25%, 88%)",
+                    borderRadius: "12px",
+                    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                  }}
+                  formatter={(value: number, _name: string, props: any) => [
+                    value.toLocaleString(),
+                    props.payload?.description || "Count",
+                  ]}
+                />
+                <Bar dataKey="count" radius={[6, 6, 0, 0]}>
+                  {data!.map((_, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={`hsl(${20 + index * 4}, ${35 + index * 5}%, ${42 + index * 6}%)`}
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+            <div className="flex flex-wrap items-center justify-center gap-1.5">
+              {data!.map((step, index) => (
+                <div key={step.stage} className="flex items-center gap-1.5">
+                  <div className="text-center">
+                    <div
+                      className="px-2.5 py-1.5 rounded-lg text-white text-xs font-medium"
+                      style={{
+                        backgroundColor: `hsl(${20 + index * 4}, ${35 + index * 5}%, ${42 + index * 6}%)`,
+                      }}
+                    >
+                      {step.count.toLocaleString()}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mt-0.5 max-w-[70px] text-center leading-tight">
+                      {step.stage}
+                    </p>
+                  </div>
+                  {index < data!.length - 1 && (
+                    <ArrowRight className="w-3 h-3 text-muted-foreground flex-shrink-0 mb-3" />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
 }
 
 export function LoyaltyProgressDistributionChart({ data, className }: LoyaltyProgressDistributionChartProps) {
