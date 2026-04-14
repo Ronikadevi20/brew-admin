@@ -2,17 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MetricCard } from "@/components/dashboard/MetricCard";
-import { PeriodSelector } from "@/components/dashboard/PeriodSelector";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   XAxis,
   YAxis,
@@ -22,51 +13,40 @@ import {
   PieChart,
   Pie,
   Cell,
-  AreaChart,
-  Area,
+  BarChart,
+  Bar,
 } from "recharts";
-import { Users, Gift, UserCheck, Clock, TrendingUp, AlertCircle, Stamp } from "lucide-react";
+import {
+  Stamp,
+  Gift,
+  Clock,
+  CheckCircle,
+  Users,
+  AlertCircle,
+  ArrowRight,
+  Camera,
+} from "lucide-react";
 import { useCafe } from "@/contexts/CafeContext";
 import { analyticsService } from "@/services/analytics.service";
 import type {
-  DashboardPeriod,
-  DashboardMetrics,
-  ChartData,
+  AllTimeStampsStats,
   StampCardFunnelData,
+  EngagementJourneyStep,
   CustomerTypeData,
-  DailyStatistics,
 } from "@/types/analytics.types";
 
-// Chart colors
 const chartColors = {
   primary: "hsl(20, 35%, 40%)",
   secondary: "hsl(28, 60%, 55%)",
   tertiary: "hsl(35, 38%, 65%)",
   quaternary: "hsl(8, 31%, 33%)",
-  quinary: "hsl(36, 47%, 81%)",
 };
 
-
-// Default values
-const defaultMetrics: DashboardMetrics = {
-  visits: 0,
-  stamps: 0,
-  bdlPosts: 0,
-  newUsers: 0,
-  peakHour: "N/A",
-  avgFrequency: 0,
-  redemptions: 0,
-  avgStampsPerUser: 0,
-  uniqueVisitors: 0,
-  changes: {
-    visits: 0,
-    stamps: 0,
-    bdlPosts: 0,
-    newUsers: 0,
-    avgFrequency: 0,
-    redemptions: 0,
-    avgStampsPerUser: 0,
-  },
+const defaultStats: AllTimeStampsStats = {
+  totalStamps: 0,
+  freeDrinksRedeemed: 0,
+  avgCompletionTimeDays: null,
+  cardsCompleted: 0,
 };
 
 const defaultCustomerType: CustomerTypeData = {
@@ -77,22 +57,16 @@ const defaultCustomerType: CustomerTypeData = {
 };
 
 export default function StampsVisits() {
-  const [period, setPeriod] = useState<DashboardPeriod>("week");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Data states
-  const [metrics, setMetrics] = useState<DashboardMetrics>(defaultMetrics);
-  const [visitsPerHour, setVisitsPerHour] = useState<ChartData>({ labels: [], data: [] });
-  const [customerType, setCustomerType] = useState<CustomerTypeData>(defaultCustomerType);
+  const [stats, setStats] = useState<AllTimeStampsStats>(defaultStats);
   const [funnelData, setFunnelData] = useState<StampCardFunnelData[]>([]);
-  const [dailyStats, setDailyStats] = useState<DailyStatistics[]>([]);
-
-  // console.log(dailyStats);
+  const [journeyData, setJourneyData] = useState<EngagementJourneyStep[]>([]);
+  const [customerType, setCustomerType] = useState<CustomerTypeData>(defaultCustomerType);
 
   const { myCafe, isInitialized: isCafeInitialized } = useCafe();
 
-  // Fetch all data
   const fetchData = useCallback(async () => {
     if (!myCafe?.id) {
       setError("No cafe found. Please complete your cafe setup first.");
@@ -104,69 +78,48 @@ export default function StampsVisits() {
     setError(null);
 
     try {
-      const [
-        metricsData,
-        visitsData,
-        customerData,
-        funnel,
-        daily,
-      ] = await Promise.all([
-        analyticsService.getDashboardMetrics(myCafe.id, period),
-        analyticsService.getVisitsChart(myCafe.id, period),
-        analyticsService.getCustomerTypeBreakdown(myCafe.id, period),
-        analyticsService.getStampCardFunnel(myCafe.id, period),
-        analyticsService.getDailyStatistics(myCafe.id, period, 7),
+      const [allTimeStats, funnel, journey, custType] = await Promise.all([
+        analyticsService.getAllTimeStampsStats(myCafe.id),
+        analyticsService.getStampCardFunnelDynamic(myCafe.id),
+        analyticsService.getEngagementJourney(myCafe.id),
+        analyticsService.getCustomerTypeBreakdown(myCafe.id, "month"),
       ]);
 
-      setMetrics(metricsData);
-      setVisitsPerHour(visitsData);
-      setCustomerType(customerData);
+      setStats(allTimeStats);
       setFunnelData(funnel);
-      setDailyStats(daily);
+      setJourneyData(journey);
+      setCustomerType(custType);
     } catch (err: any) {
-      // console.error("Failed to fetch stamps & visits data:", err);
       setError(err.response?.data?.message || "Failed to load analytics data");
     } finally {
       setIsLoading(false);
     }
-  }, [myCafe?.id, period]);
+  }, [myCafe?.id]);
 
-  // console.log(metrics)
-
-  // Fetch data on mount and when period changes
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  // Transform visits data for area chart
-  const visitsChartData = visitsPerHour.labels.map((label, index) => ({
-    hour: label,
-    visits: visitsPerHour.data[index] || 0,
-  }));
-
-
-  // Transform customer type for pie chart
   const customerTypeChartData = [
     { name: "Returning", value: customerType.returningPercentage, color: chartColors.primary },
     { name: "New", value: customerType.newPercentage, color: chartColors.secondary },
   ];
 
-  // Helper to get change type
-  const getChangeType = (value: number): "increase" | "decrease" => {
-    return value >= 0 ? "increase" : "decrease";
-  };
+  const funnelColors = [
+    "hsl(20, 35%, 40%)",
+    "hsl(22, 42%, 47%)",
+    "hsl(26, 52%, 54%)",
+    "hsl(30, 62%, 62%)",
+    "hsl(35, 38%, 72%)",
+  ];
 
-  // Show skeleton while cafe context is still initializing (prevents "No Cafe Found" flash)
   if (!isCafeInitialized) {
     return (
       <DashboardLayout>
         <div className="space-y-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <Skeleton className="h-9 w-48 mb-2" />
-              <Skeleton className="h-5 w-72" />
-            </div>
-            <Skeleton className="h-10 w-48" />
+          <div>
+            <Skeleton className="h-9 w-48 mb-2" />
+            <Skeleton className="h-5 w-72" />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[...Array(4)].map((_, i) => (
@@ -182,43 +135,29 @@ export default function StampsVisits() {
     );
   }
 
-  // Loading state
-  if (isLoading && metrics.stamps === 0) {
+  if (isLoading && stats.totalStamps === 0) {
     return (
       <DashboardLayout>
         <div className="space-y-8">
-          {/* Header Skeleton */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <Skeleton className="h-9 w-48 mb-2" />
-              <Skeleton className="h-5 w-72" />
-            </div>
-            <Skeleton className="h-10 w-48" />
+          <div>
+            <Skeleton className="h-9 w-48 mb-2" />
+            <Skeleton className="h-5 w-72" />
           </div>
-
-          {/* Metrics Skeleton */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[...Array(4)].map((_, i) => (
               <Skeleton key={i} className="h-32 rounded-xl" />
             ))}
           </div>
-
-          {/* Charts Skeleton */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Skeleton className="h-80 rounded-xl" />
             <Skeleton className="h-80 rounded-xl" />
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Skeleton className="h-80 rounded-xl" />
-            <Skeleton className="h-80 rounded-xl" />
-          </div>
-          <Skeleton className="h-96 rounded-xl" />
+          <Skeleton className="h-72 rounded-xl" />
         </div>
       </DashboardLayout>
     );
   }
 
-  // Error state (no cafe) — only show after cafe context has finished initializing
   if (isCafeInitialized && error && !myCafe?.id) {
     return (
       <DashboardLayout>
@@ -233,21 +172,19 @@ export default function StampsVisits() {
     );
   }
 
-  // console.log('red', metrics.redemptions)
+  const maxJourneyCount = Math.max(...journeyData.map((s) => s.count), 1);
 
   return (
     <DashboardLayout>
       <div className="space-y-8">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-serif font-bold text-foreground">Stamps & Visits</h1>
-            <p className="text-muted-foreground mt-1">Track customer loyalty and engagement</p>
-          </div>
-          <PeriodSelector value={period} onChange={setPeriod} />
+        <div>
+          <h1 className="text-3xl font-serif font-bold text-foreground">Stamps & Visits</h1>
+          <p className="text-muted-foreground mt-1">
+            All-time loyalty and engagement overview for {myCafe?.name || "your café"}
+          </p>
         </div>
 
-        {/* Error Alert (non-blocking) */}
         {error && myCafe?.id && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
@@ -256,187 +193,76 @@ export default function StampsVisits() {
           </Alert>
         )}
 
-        {/* Metrics Grid */}
+        {/* Metric Cards — All-Time */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <MetricCard
             title="Total Stamps"
-            value={metrics.stamps.toLocaleString()}
-            change={{ 
-              value: Math.abs(metrics.changes.stamps), 
-              type: getChangeType(metrics.changes.stamps) 
-            }}
+            value={stats.totalStamps.toLocaleString()}
             icon={Stamp}
+            description="All-time stamps collected"
             className="animate-slide-up opacity-0 stagger-1"
           />
           <MetricCard
-            title="Avg per User"
-            value={metrics.avgStampsPerUser.toString()}
-            change={{ 
-              value: Math.abs(metrics.changes.avgStampsPerUser), 
-              type: getChangeType(metrics.changes.avgStampsPerUser) 
-            }}
-            icon={TrendingUp}
+            title="Free Drinks Redeemed"
+            value={stats.freeDrinksRedeemed.toLocaleString()}
+            icon={Gift}
+            description="All-time rewards claimed"
             className="animate-slide-up opacity-0 stagger-2"
           />
           <MetricCard
-            title="Free Drink Redemptions"
-            value={metrics.redemptions.toLocaleString()}
-            change={{ 
-              value: Math.abs(metrics.changes.redemptions), 
-              type: getChangeType(metrics.changes.redemptions) 
-            }}
-            icon={Gift}
+            title="Avg Completion Time"
+            value={
+              stats.avgCompletionTimeDays !== null
+                ? `${stats.avgCompletionTimeDays}d`
+                : "—"
+            }
+            icon={Clock}
+            description="Days to complete a stamp card"
             className="animate-slide-up opacity-0 stagger-3"
           />
           <MetricCard
-            title="Unique Visitors"
-            value={metrics.uniqueVisitors.toLocaleString()}
-            change={{ 
-              value: Math.abs(metrics.changes.visits), 
-              type: getChangeType(metrics.changes.visits) 
-            }}
-            icon={UserCheck}
+            title="Cards Completed"
+            value={stats.cardsCompleted.toLocaleString()}
+            icon={CheckCircle}
+            description="All-time loyalty cards finished"
             className="animate-slide-up opacity-0 stagger-4"
           />
         </div>
 
-        {/* Visits per Hour */}
-        <div>
-          <Card className="hover:shadow-coffee-xl transition-shadow duration-300">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="w-5 h-5 text-mocha" />
-                Visits per Hour
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {visitsChartData.length === 0 ? (
-                <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                  No visit data available
-                </div>
-              ) : (
-                <ResponsiveContainer width="100%" height={300}>
-                  <AreaChart data={visitsChartData}>
-                    <defs>
-                      <linearGradient id="visitGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="hsl(28, 60%, 55%)" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="hsl(28, 60%, 55%)" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(35, 25%, 88%)" />
-                    <XAxis dataKey="hour" stroke="hsl(20, 20%, 45%)" fontSize={11} />
-                    <YAxis stroke="hsl(20, 20%, 45%)" fontSize={12} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "hsl(0, 0%, 100%)",
-                        border: "1px solid hsl(35, 25%, 88%)",
-                        borderRadius: "12px",
-                      }}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="visits"
-                      stroke="hsl(28, 60%, 55%)"
-                      strokeWidth={3}
-                      fill="url(#visitGradient)"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              )}
-            </CardContent>
-          </Card>
-
-        </div>
-
-        {/* Charts Row 2 */}
+        {/* Stamp Card Completion Funnel + Returning vs New */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Customer Type */}
-          <Card className="hover:shadow-coffee-xl transition-shadow duration-300">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="w-5 h-5 text-mocha" />
-                Returning vs New Customers
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-center gap-8">
-                <div className="relative w-48 h-48">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={customerTypeChartData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={50}
-                        outerRadius={70}
-                        dataKey="value"
-                      >
-                        {customerTypeChartData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center">
-                      <p className="text-3xl font-serif font-bold text-foreground">
-                        {customerType.returningPercentage}%
-                      </p>
-                      <p className="text-xs text-muted-foreground">Returning</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-4 h-4 rounded" style={{ backgroundColor: chartColors.primary }} />
-                    <div>
-                      <p className="font-medium text-foreground">Returning</p>
-                      <p className="text-sm text-muted-foreground">
-                        {customerType.returning} ({customerType.returningPercentage}%)
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-4 h-4 rounded" style={{ backgroundColor: chartColors.secondary }} />
-                    <div>
-                      <p className="font-medium text-foreground">New</p>
-                      <p className="text-sm text-muted-foreground">
-                        {customerType.new} ({customerType.newPercentage}%)
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Stamp Card Funnel */}
+          {/* Funnel */}
           <Card className="hover:shadow-coffee-xl transition-shadow duration-300">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Gift className="w-5 h-5 text-mocha" />
                 Stamp Card Completion Funnel
               </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                All-time — how customers progress through the loyalty card
+              </p>
             </CardHeader>
             <CardContent>
               {funnelData.length === 0 ? (
                 <div className="h-[250px] flex items-center justify-center text-muted-foreground">
-                  No funnel data available
+                  No stamp card data yet
                 </div>
               ) : (
                 <div className="space-y-3">
                   {funnelData.map((stage, index) => (
                     <div key={stage.stage} className="space-y-1">
                       <div className="flex justify-between text-sm">
-                        <span className="text-foreground font-medium">{stage.stage}</span>
-                        <span className="text-muted-foreground">{stage.users} users</span>
+                        <span className="font-medium text-foreground">{stage.stage}</span>
+                        <span className="text-muted-foreground">
+                          {stage.users.toLocaleString()} cards · {stage.percentage}%
+                        </span>
                       </div>
                       <div className="h-8 bg-secondary rounded-lg overflow-hidden">
                         <div
                           className="h-full rounded-lg transition-all duration-500"
                           style={{
-                            width: `${stage.percentage}%`,
-                            backgroundColor: `hsl(20, 35%, ${45 + index * 8}%)`,
+                            width: `${Math.max(stage.percentage, 2)}%`,
+                            backgroundColor: funnelColors[index % funnelColors.length],
                           }}
                         />
                       </div>
@@ -446,46 +272,220 @@ export default function StampsVisits() {
               )}
             </CardContent>
           </Card>
+
+          {/* Returning vs New Customers */}
+          <Card className="hover:shadow-coffee-xl transition-shadow duration-300">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-mocha" />
+                Returning vs New Customers
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">Based on last 30 days of visits</p>
+            </CardHeader>
+            <CardContent>
+              {customerType.returning + customerType.new === 0 ? (
+                <div className="h-[220px] flex items-center justify-center text-muted-foreground">
+                  No customer data available
+                </div>
+              ) : (
+                <div className="flex items-center justify-center gap-8">
+                  <div className="relative w-48 h-48">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={customerTypeChartData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={50}
+                          outerRadius={70}
+                          dataKey="value"
+                        >
+                          {customerTypeChartData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-center">
+                        <p className="text-3xl font-serif font-bold text-foreground">
+                          {customerType.returningPercentage}%
+                        </p>
+                        <p className="text-xs text-muted-foreground">Returning</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-4 h-4 rounded"
+                        style={{ backgroundColor: chartColors.primary }}
+                      />
+                      <div>
+                        <p className="font-medium text-foreground">Returning</p>
+                        <p className="text-sm text-muted-foreground">
+                          {customerType.returning} ({customerType.returningPercentage}%)
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-4 h-4 rounded"
+                        style={{ backgroundColor: chartColors.secondary }}
+                      />
+                      <div>
+                        <p className="font-medium text-foreground">New</p>
+                        <p className="text-sm text-muted-foreground">
+                          {customerType.new} ({customerType.newPercentage}%)
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Data Table */}
+        {/* Engagement Journey Funnel */}
         <Card className="hover:shadow-coffee-xl transition-shadow duration-300">
           <CardHeader>
-            <CardTitle>Daily Statistics</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <ArrowRight className="w-5 h-5 text-mocha" />
+              Stamp-to-Reward Journey
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              All-time — how customers move through your loyalty ecosystem
+            </p>
           </CardHeader>
           <CardContent>
-            {dailyStats.length === 0 ? (
-              <div className="h-48 flex items-center justify-center text-muted-foreground">
-                No daily statistics available
+            {journeyData.length === 0 ? (
+              <div className="h-[200px] flex items-center justify-center text-muted-foreground">
+                No journey data available yet
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead className="text-right">Total Visits</TableHead>
-                    <TableHead className="text-right">Total Stamps</TableHead>
-                    <TableHead className="text-right">Redemptions</TableHead>
-                    <TableHead className="text-right">Unique Users</TableHead>
-                    <TableHead className="text-right">Peak Hour</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {dailyStats.map((row) => (
-                    <TableRow key={row.date} className="hover:bg-secondary/50">
-                      <TableCell className="font-medium">{row.date}</TableCell>
-                      <TableCell className="text-right">{row.visits}</TableCell>
-                      <TableCell className="text-right">{row.stamps}</TableCell>
-                      <TableCell className="text-right">{row.redemptions}</TableCell>
-                      <TableCell className="text-right">{row.uniqueUsers}</TableCell>
-                      <TableCell className="text-right text-mocha font-medium">{row.peakHour}</TableCell>
-                    </TableRow>
+              <div className="space-y-6">
+                {/* Bar chart */}
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={journeyData} margin={{ top: 0, right: 16, left: 0, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(35, 25%, 88%)" />
+                    <XAxis
+                      dataKey="stage"
+                      stroke="hsl(20, 20%, 45%)"
+                      fontSize={11}
+                      tick={{ fontSize: 10 }}
+                    />
+                    <YAxis stroke="hsl(20, 20%, 45%)" fontSize={12} allowDecimals={false} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(0, 0%, 100%)",
+                        border: "1px solid hsl(35, 25%, 88%)",
+                        borderRadius: "12px",
+                        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                      }}
+                      formatter={(value: number, _name: string, props: any) => [
+                        value.toLocaleString(),
+                        props.payload?.description || "Count",
+                      ]}
+                    />
+                    <Bar dataKey="count" radius={[6, 6, 0, 0]}>
+                      {journeyData.map((_, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={`hsl(${20 + index * 4}, ${35 + index * 5}%, ${42 + index * 6}%)`}
+                        />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+
+                {/* Flow steps */}
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  {journeyData.map((step, index) => (
+                    <div key={step.stage} className="flex items-center gap-2">
+                      <div className="text-center">
+                        <div
+                          className="px-3 py-2 rounded-lg text-white text-sm font-medium"
+                          style={{
+                            backgroundColor: `hsl(${20 + index * 4}, ${35 + index * 5}%, ${42 + index * 6}%)`,
+                          }}
+                        >
+                          {step.count.toLocaleString()}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1 max-w-[80px] text-center leading-tight">
+                          {step.stage}
+                        </p>
+                      </div>
+                      {index < journeyData.length - 1 && (
+                        <ArrowRight className="w-4 h-4 text-muted-foreground flex-shrink-0 mb-4" />
+                      )}
+                    </div>
                   ))}
-                </TableBody>
-              </Table>
+                </div>
+              </div>
             )}
           </CardContent>
         </Card>
+
+        {/* Stamp Progress Distribution (horizontal bar) */}
+        {funnelData.length > 0 && (
+          <Card className="hover:shadow-coffee-xl transition-shadow duration-300">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Camera className="w-5 h-5 text-mocha" />
+                Stamp Progress Distribution
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Where your customers currently sit in their stamp journey
+              </p>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={Math.max(200, funnelData.length * 52)}>
+                <BarChart
+                  data={[...funnelData].reverse()}
+                  layout="vertical"
+                  margin={{ left: 16, right: 32 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="hsl(35, 25%, 88%)"
+                    horizontal={false}
+                  />
+                  <XAxis
+                    type="number"
+                    stroke="hsl(20, 20%, 45%)"
+                    fontSize={12}
+                    allowDecimals={false}
+                  />
+                  <YAxis
+                    type="category"
+                    dataKey="stage"
+                    stroke="hsl(20, 20%, 45%)"
+                    fontSize={11}
+                    width={90}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "hsl(0, 0%, 100%)",
+                      border: "1px solid hsl(35, 25%, 88%)",
+                      borderRadius: "12px",
+                      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                    }}
+                    formatter={(value: number) => [value.toLocaleString(), "Cards"]}
+                  />
+                  <Bar dataKey="users" radius={[0, 6, 6, 0]}>
+                    {[...funnelData].reverse().map((_, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={funnelColors[index % funnelColors.length]}
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </DashboardLayout>
   );

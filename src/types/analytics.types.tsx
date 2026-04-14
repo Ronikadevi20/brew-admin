@@ -258,3 +258,32 @@ export interface StampsByDrinkData {
   value: number;
   percentage: number;
 }
+
+// ==================== Stamps & Visits All-Time Types ====================
+
+export interface AllTimeStampsStats {
+  totalStamps: number;
+  freeDrinksRedeemed: number;
+  avgCompletionTimeDays: number | null;
+  cardsCompleted: number;
+}
+
+export interface EngagementJourneyStep {
+  stage: string;
+  count: number;
+  description: string;
+}
+
+export interface CustomerSegments {
+  new: number;
+  returning: number;
+  loyal: number;
+  atRisk: number;
+  total: number;
+}
+
+export interface CustomerIntelligence {
+  highlights: string[];
+  whatsChanged: string[];
+  recommendations: string[];
+}

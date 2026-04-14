@@ -63,6 +63,11 @@ export const API_ENDPOINTS = {
       REPEAT_RATE_TREND: (cafeId: string) => `/analytics/dashboard/${cafeId}/repeat-rate-trend`,
       VISIT_GAP_DISTRIBUTION: (cafeId: string) => `/analytics/dashboard/${cafeId}/visit-gap-distribution`,
       LOYALTY_PROGRESS: (cafeId: string) => `/analytics/dashboard/${cafeId}/loyalty-progress`,
+      ALL_TIME_STATS: (cafeId: string) => `/analytics/dashboard/${cafeId}/all-time-stats`,
+      STAMP_CARD_FUNNEL_DYNAMIC: (cafeId: string) => `/analytics/dashboard/${cafeId}/stamp-card-funnel-dynamic`,
+      ENGAGEMENT_JOURNEY: (cafeId: string) => `/analytics/dashboard/${cafeId}/engagement-journey`,
+      CUSTOMER_SEGMENTS: (cafeId: string) => `/analytics/dashboard/${cafeId}/customer-segments`,
+      CUSTOMER_INTELLIGENCE: (cafeId: string) => `/analytics/dashboard/${cafeId}/customer-intelligence`,
     },
   },
   NOTIFICATIONS: {

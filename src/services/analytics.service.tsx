@@ -35,6 +35,10 @@ import type {
   RepeatRateTrendPoint,
   VisitGapBucket,
   LoyaltyProgressStage,
+  AllTimeStampsStats,
+  EngagementJourneyStep,
+  CustomerSegments,
+  CustomerIntelligence,
 } from '@/types/analytics.types';
 
 /**
@@ -373,6 +377,64 @@ export const analyticsService = {
   ): Promise<LoyaltyProgressStage[]> => {
     const response = await apiClient.get<{ success: boolean; data: LoyaltyProgressStage[] }>(
       API_ENDPOINTS.ANALYTICS.DASHBOARD.LOYALTY_PROGRESS(cafeId),
+      { params: { period } }
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Get all-time stamps stats (for Stamps & Visits page)
+   */
+  getAllTimeStampsStats: async (cafeId: string): Promise<AllTimeStampsStats> => {
+    const response = await apiClient.get<{ success: boolean; data: AllTimeStampsStats }>(
+      API_ENDPOINTS.ANALYTICS.DASHBOARD.ALL_TIME_STATS(cafeId)
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Get dynamic stamp card funnel (all-time, based on cafe.stampsRequired)
+   */
+  getStampCardFunnelDynamic: async (cafeId: string): Promise<StampCardFunnelData[]> => {
+    const response = await apiClient.get<{ success: boolean; data: StampCardFunnelData[] }>(
+      API_ENDPOINTS.ANALYTICS.DASHBOARD.STAMP_CARD_FUNNEL_DYNAMIC(cafeId)
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Get engagement journey funnel (all-time)
+   */
+  getEngagementJourney: async (cafeId: string): Promise<EngagementJourneyStep[]> => {
+    const response = await apiClient.get<{ success: boolean; data: EngagementJourneyStep[] }>(
+      API_ENDPOINTS.ANALYTICS.DASHBOARD.ENGAGEMENT_JOURNEY(cafeId)
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Get customer segments
+   */
+  getCustomerSegments: async (
+    cafeId: string,
+    period: DashboardPeriod = 'week'
+  ): Promise<CustomerSegments> => {
+    const response = await apiClient.get<{ success: boolean; data: CustomerSegments }>(
+      API_ENDPOINTS.ANALYTICS.DASHBOARD.CUSTOMER_SEGMENTS(cafeId),
+      { params: { period } }
+    );
+    return response.data.data;
+  },
+
+  /**
+   * Get customer intelligence (period-aware insights)
+   */
+  getCustomerIntelligence: async (
+    cafeId: string,
+    period: DashboardPeriod = 'week'
+  ): Promise<CustomerIntelligence> => {
+    const response = await apiClient.get<{ success: boolean; data: CustomerIntelligence }>(
+      API_ENDPOINTS.ANALYTICS.DASHBOARD.CUSTOMER_INTELLIGENCE(cafeId),
       { params: { period } }
     );
     return response.data.data;

@@ -25,6 +25,7 @@ import type {
   RepeatRateTrendPoint,
   VisitGapBucket,
   LoyaltyProgressStage,
+  EngagementJourneyStep,
 } from '@/types/analytics.types';
 
 // Default empty metrics
@@ -86,6 +87,7 @@ interface DashboardContextType {
   repeatRateTrend: RepeatRateTrendPoint[];
   visitGapDistribution: VisitGapBucket[];
   loyaltyProgress: LoyaltyProgressStage[];
+  engagementJourney: EngagementJourneyStep[];
   isLoading: boolean;
   error: string | null;
 
@@ -113,6 +115,7 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
   const [repeatRateTrend, setRepeatRateTrend] = useState<RepeatRateTrendPoint[]>([]);
   const [visitGapDistribution, setVisitGapDistribution] = useState<VisitGapBucket[]>([]);
   const [loyaltyProgress, setLoyaltyProgress] = useState<LoyaltyProgressStage[]>([]);
+  const [engagementJourney, setEngagementJourney] = useState<EngagementJourneyStep[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -139,6 +142,7 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
         repeatRateTrendData,
         visitGapData,
         loyaltyProgressData,
+        journeyData,
       ] = await Promise.all([
         analyticsService.getDashboardMetrics(myCafe.id, period),
         analyticsService.getVisitsChart(myCafe.id, period),
@@ -148,6 +152,7 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
         analyticsService.getRepeatRateTrend(myCafe.id, period),
         analyticsService.getVisitGapDistribution(myCafe.id, period),
         analyticsService.getLoyaltyProgressDistribution(myCafe.id, period),
+        analyticsService.getEngagementJourney(myCafe.id),
       ]);
 
       setMetrics(metricsData);
@@ -158,6 +163,7 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
       setRepeatRateTrend(repeatRateTrendData);
       setVisitGapDistribution(visitGapData);
       setLoyaltyProgress(loyaltyProgressData);
+      setEngagementJourney(journeyData);
     } catch (err: any) {
       // console.error('Failed to fetch dashboard data:', err);
       setError(err.response?.data?.message || 'Failed to load dashboard data');
@@ -194,6 +200,7 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
       repeatRateTrend,
       visitGapDistribution,
       loyaltyProgress,
+      engagementJourney,
       isLoading,
       error,
       setPeriod,
@@ -209,6 +216,7 @@ export function DashboardProvider({ children }: DashboardProviderProps) {
       repeatRateTrend,
       visitGapDistribution,
       loyaltyProgress,
+      engagementJourney,
       isLoading,
       error,
       refreshData,

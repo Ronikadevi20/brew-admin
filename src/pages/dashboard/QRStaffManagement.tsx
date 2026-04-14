@@ -331,7 +331,7 @@ export default function QRStaffManagement() {
         setRedemptionToken("");
         toast({
           title: "Reward Redeemed!",
-          description: `Successfully redeemed ${result.reward} for ${result.user.username}`,
+          description: `Successfully redeemed ${result.reward}`,
         });
         // Refresh PIN activity
         if (myCafe?.id) {
@@ -417,6 +417,12 @@ export default function QRStaffManagement() {
     }
   };
 
+  // Mask a name/username — show first letter + ****
+  const maskName = (name: string): string => {
+    if (!name) return "•••••";
+    return name.charAt(0).toUpperCase() + "****";
+  };
+
   // Format time
   const formatTime = (dateString: string | null): string => {
     if (!dateString) return "N/A";
@@ -497,7 +503,7 @@ export default function QRStaffManagement() {
                   </h3>
                   <div className="space-y-2 text-muted-foreground">
                     <p className="text-lg">
-                      <span className="font-medium text-foreground">{redemptionResult.user.username}</span>
+                      <span className="font-medium text-foreground">{maskName(redemptionResult.user.username)}</span>
                     </p>
                     <p className="text-2xl font-serif font-bold text-mocha">
                       {redemptionResult.reward}
@@ -521,7 +527,7 @@ export default function QRStaffManagement() {
               <div className="space-y-4">
                 <div className="bg-secondary/50 rounded-xl p-4 mb-4">
                   <p className="text-sm text-muted-foreground">
-                    Ask the customer for their 6-letter redemption code, or scan their QR code with your camera.
+                    Ask the customer for their 6-letter redemption code.
                   </p>
                 </div>
 
@@ -794,7 +800,7 @@ export default function QRStaffManagement() {
                         <TableRow>
                           <TableHead>Time</TableHead>
                           <TableHead>Action</TableHead>
-                          <TableHead>Username</TableHead>
+                          <TableHead>Customer</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -818,7 +824,7 @@ export default function QRStaffManagement() {
                                 ) : (
                                   <XCircle className="w-3 h-3 text-destructive" />
                                 )}
-                                {scan.staffMember}
+                                {maskName(scan.staffMember)}
                               </span>
                             </TableCell>
                           </TableRow>

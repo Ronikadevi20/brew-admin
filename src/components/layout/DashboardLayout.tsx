@@ -1,18 +1,19 @@
 import { useState, useEffect, useCallback } from "react";
 import { NavLink as RouterNavLink, useLocation, useNavigate } from "react-router-dom";
-import { 
-  Coffee, 
-  LayoutDashboard, 
-  TrendingUp, 
-  Stamp, 
-  Store, 
-  Calendar, 
-  QrCode, 
-  LogOut, 
-  Bell, 
+import {
+  Coffee,
+  LayoutDashboard,
+  TrendingUp,
+  Stamp,
+  Store,
+  Calendar,
+  QrCode,
+  LogOut,
+  Bell,
   ChevronDown,
   Menu,
-  X 
+  X,
+  Brain,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCafe } from "@/contexts/CafeContext";
@@ -28,10 +29,27 @@ import {
 import { OnboardingBanner } from "@/components/dashboard/OnboardingBanner";
 import { cn } from "@/lib/utils";
 
+/**
+ * Mask any leading username in a notification string.
+ * Replaces patterns like "John collected..." → "C**** collected..."
+ * Replaces "@username" → "@u****"
+ */
+function maskNotificationText(text: string): string {
+  if (!text) return text;
+  // Pattern: word followed by a known action verb — mask the word
+  return text
+    .replace(
+      /^([A-Za-z0-9_]+)(\s+(collected|redeemed|scanned|earned|claimed|joined|completed|visited))/i,
+      (_match, name, rest) => name.charAt(0).toUpperCase() + "****" + rest
+    )
+    .replace(/@([A-Za-z0-9_]+)/g, (_match, name) => "@" + name.charAt(0) + "****");
+}
+
 const navItems = [
   { title: "Dashboard Overview", path: "/dashboard", icon: LayoutDashboard },
   // { title: "BDL Insights", path: "/dashboard/bdl-insights", icon: TrendingUp },
   { title: "Stamps & Visits", path: "/dashboard/stamps-visits", icon: Stamp },
+  { title: "Customer Insights", path: "/dashboard/customer-insights", icon: Brain },
   { title: "Café Profile", path: "/dashboard/profile", icon: Store },
   { title: "Events & Promotions", path: "/dashboard/events", icon: Calendar },
   { title: "QR & Staff", path: "/dashboard/qr-staff", icon: QrCode },
@@ -92,6 +110,29 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
     } catch (error) {
       // console.error("Failed to mark all as read:", error);
+    }
+  };
+
+  const handleClearAll = async () => {
+    try {
+      await notificationsService.deleteAll();
+      setNotifications([]);
+      setUnreadCount(0);
+    } catch (error) {
+      // console.error("Failed to clear notifications:", error);
+    }
+  };
+
+  const handleDeleteNotification = async (id: string) => {
+    try {
+      await notificationsService.delete(id);
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+      setUnreadCount((prev) => {
+        const deleted = notifications.find((n) => n.id === id);
+        return deleted && !deleted.isRead ? Math.max(0, prev - 1) : prev;
+      });
+    } catch (error) {
+      // console.error("Failed to delete notification:", error);
     }
   };
 
@@ -223,14 +264,24 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   <div className="absolute right-0 top-12 z-50 w-80 bg-card border border-border rounded-xl shadow-coffee-xl overflow-hidden">
                     <div className="flex items-center justify-between px-4 py-3 border-b border-border">
                       <h3 className="font-semibold text-foreground text-sm">Notifications</h3>
-                      {unreadCount > 0 && (
-                        <button
-                          onClick={handleMarkAllRead}
-                          className="text-xs text-accent hover:text-accent/80 font-medium"
-                        >
-                          Mark all read
-                        </button>
-                      )}
+                      <div className="flex items-center gap-3">
+                        {unreadCount > 0 && (
+                          <button
+                            onClick={handleMarkAllRead}
+                            className="text-xs text-accent hover:text-accent/80 font-medium"
+                          >
+                            Mark all read
+                          </button>
+                        )}
+                        {notifications.length > 0 && (
+                          <button
+                            onClick={handleClearAll}
+                            className="text-xs text-muted-foreground hover:text-destructive font-medium transition-colors"
+                          >
+                            Clear all
+                          </button>
+                        )}
+                      </div>
                     </div>
                     <div className="max-h-80 overflow-y-auto">
                       {notifications.length === 0 ? (
@@ -242,7 +293,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                           <div
                             key={notif.id}
                             className={cn(
-                              "px-4 py-3 border-b border-border/50 last:border-0 hover:bg-secondary/30 transition-colors",
+                              "px-4 py-3 border-b border-border/50 last:border-0 hover:bg-secondary/30 transition-colors group",
                               !notif.isRead && "bg-secondary/20"
                             )}
                           >
@@ -250,9 +301,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                               {!notif.isRead && (
                                 <div className="w-2 h-2 bg-caramel rounded-full mt-1.5 flex-shrink-0" />
                               )}
-                              <div className={cn("flex-1", notif.isRead && "ml-5")}>
-                                <p className="text-sm font-medium text-foreground">{notif.title}</p>
-                                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{notif.message}</p>
+                              <div className={cn("flex-1 min-w-0", notif.isRead && "ml-5")}>
+                                <p className="text-sm font-medium text-foreground">{maskNotificationText(notif.title)}</p>
+                                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{maskNotificationText(notif.message)}</p>
                                 <p className="text-[10px] text-muted-foreground/60 mt-1">
                                   {new Date(notif.createdAt).toLocaleDateString("en-US", {
                                     month: "short",
@@ -262,6 +313,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                                   })}
                                 </p>
                               </div>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleDeleteNotification(notif.id); }}
+                                className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all flex-shrink-0 mt-0.5"
+                                aria-label="Delete notification"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
                             </div>
                           </div>
                         ))
