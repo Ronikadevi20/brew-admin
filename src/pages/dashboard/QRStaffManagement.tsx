@@ -518,8 +518,7 @@ export default function QRStaffManagement() {
                   className="w-full"
                   onClick={handleClearRedemption}
                 >
-                  <Scan className="w-4 h-4 mr-2" />
-                  Scan Another Reward
+                  New Redemption
                 </Button>
               </div>
             ) : (

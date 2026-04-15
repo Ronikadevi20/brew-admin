@@ -108,6 +108,10 @@ export default function CustomerInsights() {
   }
 
   const activeThisPeriod = segments.new + segments.returning;
+  const periodPct = (count: number) =>
+    activeThisPeriod > 0 ? Math.round((count / activeThisPeriod) * 100) : 0;
+  const totalPct = (count: number) =>
+    segments.total > 0 ? Math.round((count / segments.total) * 100) : 0;
 
   return (
     <DashboardLayout>
@@ -152,18 +156,20 @@ export default function CustomerInsights() {
               <SegmentCard
                 title="New Customers"
                 count={segments.new}
-                total={segments.total}
+                pct={periodPct(segments.new)}
+                percentageLabel={`of visitors ${periodLabel}`}
                 description={`First-time visitors ${periodLabel}`}
-                note="Their very first stamp at your café was in this period."
+                note={`Their very first-ever stamp at your café was within this period — genuinely brand new${period === "today" ? " today" : period === "week" ? " in the last 7 days" : " in the last 30 days"}.`}
                 icon={UserPlus}
                 accentColor="blue"
               />
               <SegmentCard
                 title="Returning Customers"
                 count={segments.returning}
-                total={segments.total}
+                pct={periodPct(segments.returning)}
+                percentageLabel={`of visitors ${periodLabel}`}
                 description={`Came back ${periodLabel}`}
-                note="Had visited before this period AND visited again — not yet a card completer."
+                note="Had visited your café before this period and came back — includes loyal customers."
                 icon={RefreshCw}
                 accentColor="emerald"
               />
@@ -177,7 +183,8 @@ export default function CustomerInsights() {
               <SegmentCard
                 title="Loyal Customers"
                 count={segments.loyal}
-                total={segments.total}
+                pct={totalPct(segments.loyal)}
+                percentageLabel="of all customers"
                 description="Completed at least one full stamp card"
                 note="These customers have earned a free drink — your proven loyalists."
                 icon={Star}
@@ -186,9 +193,10 @@ export default function CustomerInsights() {
               <SegmentCard
                 title="At Risk"
                 count={segments.atRisk}
-                total={segments.total}
+                pct={totalPct(segments.atRisk)}
+                percentageLabel="of all customers"
                 description="No visit in the last 30 days"
-                note="Haven't visited recently and did not visit in this period. May include loyal customers who are lapsing."
+                note="Haven't visited recently. May include loyal customers who are lapsing."
                 icon={UserX}
                 accentColor="red"
               />
@@ -367,16 +375,16 @@ const accentMap: Record<AccentColor, { text: string; bg: string; bar: string }> 
 interface SegmentCardProps {
   title: string;
   count: number;
-  total: number;
+  pct: number;
+  percentageLabel: string;
   description: string;
   note: string;
   icon: React.ElementType;
   accentColor: AccentColor;
 }
 
-function SegmentCard({ title, count, total, description, note, icon: Icon, accentColor }: SegmentCardProps) {
+function SegmentCard({ title, count, pct, percentageLabel, description, note, icon: Icon, accentColor }: SegmentCardProps) {
   const acc = accentMap[accentColor];
-  const pct = total > 0 ? Math.round((count / total) * 100) : 0;
 
   return (
     <Card className="hover:shadow-coffee-xl transition-shadow duration-300">
@@ -389,8 +397,8 @@ function SegmentCard({ title, count, total, description, note, icon: Icon, accen
             <p className={cn("text-3xl font-serif font-bold", acc.text)}>
               {count.toLocaleString()}
             </p>
-            {total > 0 && (
-              <p className="text-xs text-muted-foreground">{pct}% of all customers</p>
+            {pct > 0 && (
+              <p className="text-xs text-muted-foreground">{pct}% {percentageLabel}</p>
             )}
           </div>
         </div>
@@ -398,7 +406,7 @@ function SegmentCard({ title, count, total, description, note, icon: Icon, accen
           <p className="font-semibold text-foreground text-sm">{title}</p>
           <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
         </div>
-        {total > 0 && (
+        {pct > 0 && (
           <div className="mt-3">
             <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
               <div

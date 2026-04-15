@@ -254,7 +254,7 @@ export default function StampsVisits() {
                       <div className="flex justify-between text-sm">
                         <span className="font-medium text-foreground">{stage.stage}</span>
                         <span className="text-muted-foreground">
-                          {stage.users.toLocaleString()} cards · {stage.percentage}%
+                          {stage.users.toLocaleString()} users · {stage.percentage}%
                         </span>
                       </div>
                       <div className="h-8 bg-secondary rounded-lg overflow-hidden">
@@ -364,64 +364,30 @@ export default function StampsVisits() {
                 No journey data available yet
               </div>
             ) : (
-              <div className="space-y-6">
-                {/* Bar chart */}
-                <ResponsiveContainer width="100%" height={220}>
-                  <BarChart data={journeyData} margin={{ top: 0, right: 16, left: 0, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(35, 25%, 88%)" />
-                    <XAxis
-                      dataKey="stage"
-                      stroke="hsl(20, 20%, 45%)"
-                      fontSize={11}
-                      tick={{ fontSize: 10 }}
-                    />
-                    <YAxis stroke="hsl(20, 20%, 45%)" fontSize={12} allowDecimals={false} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "hsl(0, 0%, 100%)",
-                        border: "1px solid hsl(35, 25%, 88%)",
-                        borderRadius: "12px",
-                        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-                      }}
-                      formatter={(value: number, _name: string, props: any) => [
-                        value.toLocaleString(),
-                        props.payload?.description || "Count",
-                      ]}
-                    />
-                    <Bar dataKey="count" radius={[6, 6, 0, 0]}>
-                      {journeyData.map((_, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={`hsl(${20 + index * 4}, ${35 + index * 5}%, ${42 + index * 6}%)`}
-                        />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-
-                {/* Flow steps */}
-                <div className="flex flex-wrap items-center justify-center gap-2">
-                  {journeyData.map((step, index) => (
-                    <div key={step.stage} className="flex items-center gap-2">
-                      <div className="text-center">
-                        <div
-                          className="px-3 py-2 rounded-lg text-white text-sm font-medium"
-                          style={{
-                            backgroundColor: `hsl(${20 + index * 4}, ${35 + index * 5}%, ${42 + index * 6}%)`,
-                          }}
-                        >
-                          {step.count.toLocaleString()}
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-1 max-w-[80px] text-center leading-tight">
-                          {step.stage}
-                        </p>
+              <div className="space-y-3">
+                {journeyData.map((step, index) => {
+                  const maxCount = Math.max(...journeyData.map((s) => s.count), 1);
+                  const pct = maxCount > 0 ? Math.round((step.count / maxCount) * 100) : 0;
+                  return (
+                    <div key={step.stage} className="space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span className="font-medium text-foreground">{step.stage}</span>
+                        <span className="text-muted-foreground">
+                          {step.count.toLocaleString()} · {pct}%
+                        </span>
                       </div>
-                      {index < journeyData.length - 1 && (
-                        <ArrowRight className="w-4 h-4 text-muted-foreground flex-shrink-0 mb-4" />
-                      )}
+                      <div className="h-8 bg-secondary rounded-lg overflow-hidden">
+                        <div
+                          className="h-full rounded-lg transition-all duration-500"
+                          style={{
+                            width: `${Math.max(pct, 2)}%`,
+                            backgroundColor: funnelColors[index % funnelColors.length],
+                          }}
+                        />
+                      </div>
                     </div>
-                  ))}
-                </div>
+                  );
+                })}
               </div>
             )}
           </CardContent>
@@ -471,7 +437,7 @@ export default function StampsVisits() {
                       borderRadius: "12px",
                       boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
                     }}
-                    formatter={(value: number) => [value.toLocaleString(), "Cards"]}
+                    formatter={(value: number) => [value.toLocaleString(), "Users"]}
                   />
                   <Bar dataKey="users" radius={[0, 6, 6, 0]}>
                     {[...funnelData].reverse().map((_, index) => (
