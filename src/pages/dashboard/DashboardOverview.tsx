@@ -6,7 +6,6 @@ import {
   RepeatRateTrendChart,
   VisitGapDistributionChart,
   LoyaltyProgressDistributionChart,
-  EngagementJourneyChart,
 } from "@/components/dashboard/Charts";
 import { Stamp, UserPlus, Gift, Users, RefreshCw, Activity, AlertCircle } from "lucide-react";
 import { useCafe } from "@/contexts/CafeContext";
@@ -24,7 +23,6 @@ export default function DashboardOverview() {
     repeatRateTrend,
     visitGapDistribution,
     loyaltyProgress,
-    engagementJourney,
     isLoading,
     error,
   } = useDashboard();
@@ -76,7 +74,6 @@ export default function DashboardOverview() {
             <Skeleton className="h-80 rounded-xl" />
             <Skeleton className="h-80 rounded-xl" />
           </div>
-          <Skeleton className="h-72 rounded-xl" />
         </div>
       </DashboardLayout>
     );
@@ -107,7 +104,6 @@ export default function DashboardOverview() {
             <Skeleton className="h-80 rounded-xl" />
             <Skeleton className="h-80 rounded-xl" />
           </div>
-          <Skeleton className="h-72 rounded-xl" />
         </div>
       </DashboardLayout>
     );
@@ -225,8 +221,6 @@ export default function DashboardOverview() {
           <VisitGapDistributionChart data={visitGapDistribution} />
           <LoyaltyProgressDistributionChart data={loyaltyProgress} />
         </div>
-
-        <EngagementJourneyChart data={engagementJourney} />
       </div>
     </DashboardLayout>
   );
