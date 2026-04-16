@@ -37,8 +37,14 @@ import {
   Instagram,
   Globe,
   X,
+  Coffee,
+  UtensilsCrossed,
+  KeyRound,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import type { OperatingHours, UpdateCafeRequest } from "@/types/cafe.types";
+import authService from "@/services/auth.service";
 
 const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
@@ -58,6 +64,91 @@ const defaultHours: OperatingHours[] = daysOfWeek.map((day) => ({
   close: "22:00",
   isClosed: false,
 }));
+
+function ChangePasswordCard() {
+  const { toast } = useToast();
+  const [form, setForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
+  const [show, setShow] = useState({ current: false, new: false, confirm: false });
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSubmit = async () => {
+    if (form.newPassword !== form.confirmPassword) {
+      toast({ title: "Passwords don't match", variant: "destructive" });
+      return;
+    }
+    if (form.newPassword.length < 8) {
+      toast({ title: "Password must be at least 8 characters", variant: "destructive" });
+      return;
+    }
+    setIsSaving(true);
+    try {
+      await authService.changePassword(form);
+      toast({ title: "Password updated", description: "Your password has been changed successfully." });
+      setForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    } catch (err: any) {
+      toast({
+        title: "Failed to update password",
+        description: err.response?.data?.message || "Please check your current password and try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const PasswordInput = ({ id, label, field }: { id: string; label: string; field: keyof typeof show }) => (
+    <div className="space-y-2">
+      <Label htmlFor={id}>{label}</Label>
+      <div className="relative">
+        <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Input
+          id={id}
+          type={show[field] ? "text" : "password"}
+          value={form[field === "current" ? "currentPassword" : field === "new" ? "newPassword" : "confirmPassword"]}
+          onChange={(e) => setForm(prev => ({
+            ...prev,
+            [field === "current" ? "currentPassword" : field === "new" ? "newPassword" : "confirmPassword"]: e.target.value,
+          }))}
+          className="pl-12 pr-12"
+          placeholder="••••••••"
+        />
+        <button
+          type="button"
+          onClick={() => setShow(prev => ({ ...prev, [field]: !prev[field] }))}
+          className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+        >
+          {show[field] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+        </button>
+      </div>
+    </div>
+  );
+
+  return (
+    <Card className="hover:shadow-coffee-xl transition-shadow duration-300">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <KeyRound className="w-5 h-5 text-mocha" />
+          Change Password
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid gap-4 max-w-md">
+          <PasswordInput id="currentPassword" label="Current Password" field="current" />
+          <PasswordInput id="newPassword" label="New Password" field="new" />
+          <PasswordInput id="confirmPassword" label="Confirm New Password" field="confirm" />
+          <Button
+            variant="coffee"
+            onClick={handleSubmit}
+            disabled={isSaving || !form.currentPassword || !form.newPassword || !form.confirmPassword}
+            className="w-fit"
+          >
+            {isSaving ? "Updating..." : "Update Password"}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function CafeProfile() {
   const { toast } = useToast();
@@ -81,6 +172,7 @@ export default function CafeProfile() {
     email: "",
     instagram: "",
     website: "",
+    businessType: "COFFEE" as "COFFEE" | "FOOD",
     imageUrl: null as string | null,
     amenities: [] as string[],
     hours: defaultHours,
@@ -123,6 +215,7 @@ export default function CafeProfile() {
         email: myCafe.email || "",
         instagram: myCafe.instagram || "",
         website: myCafe.website || "",
+        businessType: (myCafe.businessType as "COFFEE" | "FOOD") || "COFFEE",
         imageUrl: myCafe.imageUrl || null,
         amenities: myCafe.amenities || [],
         hours: fullHours,
@@ -238,6 +331,7 @@ export default function CafeProfile() {
         email: profile.email || null,
         instagram: profile.instagram || null,
         website: profile.website || null,
+        businessType: profile.businessType,
         amenities: profile.amenities,
         openingHours: profile.hours.filter(h => !h.isClosed),
       };
@@ -564,6 +658,30 @@ export default function CafeProfile() {
                   />
                 </div>
               </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <Label>Business Type</Label>
+                <div className="grid grid-cols-2 gap-3 max-w-sm">
+                  {([
+                    { value: "COFFEE", label: "Coffee", icon: Coffee },
+                    { value: "FOOD",   label: "Food",   icon: UtensilsCrossed },
+                  ] as const).map(({ value, label, icon: Icon }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => updateProfile({ businessType: value })}
+                      className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${
+                        profile.businessType === value
+                          ? "border-primary bg-primary/5 text-primary"
+                          : "border-border hover:border-primary/50 text-muted-foreground"
+                      }`}
+                    >
+                      <Icon className="w-4 h-4" />
+                      <span className="font-medium text-sm">{label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -659,6 +777,9 @@ export default function CafeProfile() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Change Password */}
+        <ChangePasswordCard />
 
         {/* Save Button */}
         <div className="flex justify-end gap-4">
