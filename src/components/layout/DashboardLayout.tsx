@@ -180,7 +180,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   Café Admin
                 </h1>
                 <p className="text-xs text-sidebar-foreground/60">
-                  Coffee Culture
+                  Cravd
                 </p>
               </div>
             </div>

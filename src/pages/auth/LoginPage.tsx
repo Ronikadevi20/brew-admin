@@ -90,10 +90,10 @@ export default function LoginPage() {
             <Coffee className="w-10 h-10" />
           </div>
           <h1 className="text-4xl font-serif font-bold mb-4 text-center animate-fade-in stagger-1 opacity-0">
-            Coffee Culture
+            Cravd
           </h1>
           <p className="text-lg text-primary-foreground/80 text-center max-w-md animate-fade-in stagger-2 opacity-0">
-            Manage your café, track customer engagement, and grow your coffee community.
+            Manage your café, track customer engagement, and grow your community.
           </p>
           
           {/* Floating elements */}

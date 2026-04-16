@@ -188,7 +188,7 @@ export default function DashboardOverview() {
             className="animate-slide-up opacity-0 stagger-4"
           />
           <MetricCard
-            title="Free Drinks Redeemed"
+            title="Rewards Redeemed"
             value={metrics.freeDrinksRedeemed.toLocaleString()}
             change={{
               value: Math.abs(metrics.changes.redemptions),

@@ -203,7 +203,7 @@ export default function StampsVisits() {
             className="animate-slide-up opacity-0 stagger-1"
           />
           <MetricCard
-            title="Free Drinks Redeemed"
+            title="Rewards Redeemed"
             value={stats.freeDrinksRedeemed.toLocaleString()}
             icon={Gift}
             description="All-time rewards claimed"
