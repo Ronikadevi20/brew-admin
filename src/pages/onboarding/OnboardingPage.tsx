@@ -124,7 +124,7 @@ export default function OnboardingPage() {
                 Café Setup
               </h1>
               <p className="text-xs text-muted-foreground">
-                Coffee Culture
+                Cravd
               </p>
             </div>
           </div>
