@@ -663,7 +663,7 @@ export default function CafeProfile() {
                 <Label>Business Type</Label>
                 <div className="grid grid-cols-2 gap-3 max-w-sm">
                   {([
-                    { value: "COFFEE", label: "Coffee", icon: Coffee },
+                    { value: "BEVERAGES", label: "Beverages", icon: Coffee },
                     { value: "FOOD",   label: "Food",   icon: UtensilsCrossed },
                   ] as const).map(({ value, label, icon: Icon }) => (
                     <button
