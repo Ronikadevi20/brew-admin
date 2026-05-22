@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { useEffect } from "react";
 import { CafeProvider } from "@/contexts/CafeContext";
 import { DashboardProvider } from "@/contexts/DashboardContext";
 
@@ -53,15 +54,26 @@ function AuthLoading() {
 }
 
 /**
+ * Forces logout and redirects to login.
+ * Used when a deactivated user is detected on a protected route.
+ */
+function ForceLogout() {
+  const { logout } = useAuth();
+  useEffect(() => { logout(); }, [logout]);
+  return <Navigate to="/" replace />;
+}
+
+/**
  * Protected route wrapper
  * Redirects to login if not authenticated
  * Redirects to onboarding if not completed (for cafe admins)
+ * Forces logout if account is deactivated
  */
-function ProtectedRoute({ 
-  children, 
+function ProtectedRoute({
+  children,
   requireOnboarding = true,
   withDashboardProvider = false,
-}: { 
+}: {
   children: React.ReactNode;
   requireOnboarding?: boolean;
   withDashboardProvider?: boolean;
@@ -76,6 +88,11 @@ function ProtectedRoute({
   // Redirect to login if not authenticated
   if (!isAuthenticated) {
     return <Navigate to="/" replace />;
+  }
+
+  // Force logout if account has been deactivated
+  if (user?.isActive === false) {
+    return <ForceLogout />;
   }
 
   // For cafe admins, check onboarding and approval status
