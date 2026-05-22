@@ -130,7 +130,7 @@ export function ProfileForm({ onNext, onSaveDraft, isLoading }: ProfileFormProps
         <Label className="text-sm font-medium mb-3 block">Business Type *</Label>
         <div className="grid grid-cols-2 gap-3">
           {([
-            { value: 'COFFEE', label: 'Coffee', icon: Coffee },
+            { value: 'BEVERAGES', label: 'Beverages', icon: Coffee },
             { value: 'FOOD',   label: 'Food',   icon: UtensilsCrossed },
           ] as const).map(({ value, label, icon: Icon }) => (
             <button
