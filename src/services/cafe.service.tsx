@@ -53,7 +53,7 @@ function profileToCreateRequest(profile: CafeProfile): CreateCafeRequest {
     longitude: null,
 
     // Business type
-    businessType: profile.businessType || 'COFFEE',
+    businessType: profile.businessType || 'BEVERAGES',
 
     // Reward settings
     stampsRequired: profile.stampsRequired || 10,

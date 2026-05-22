@@ -53,7 +53,7 @@ export interface Cafe {
     averageRating: number;
     totalReviews: number;
   };
-  businessType?: 'COFFEE' | 'FOOD';
+  businessType?: 'BEVERAGES' | 'FOOD';
   // Reward settings
   stampsRequired?: number;
   rewardDescription?: string;
@@ -83,7 +83,7 @@ export interface CafeProfile {
   onboardingStep: number;
   termsAccepted: boolean;
   antifraudAccepted: boolean;
-  businessType: 'COFFEE' | 'FOOD';
+  businessType: 'BEVERAGES' | 'FOOD';
   // Reward settings
   stampsRequired: number;
   rewardDescription: string;
@@ -107,7 +107,7 @@ export interface CreateCafeRequest {
   openingHours?: OperatingHours[] | null;
   instagram?: string | null;
   website?: string | null;
-  businessType?: 'COFFEE' | 'FOOD';
+  businessType?: 'BEVERAGES' | 'FOOD';
   // Reward settings
   stampsRequired?: number;
   rewardDescription?: string;
@@ -132,7 +132,7 @@ export interface UpdateCafeRequest {
   instagram?: string | null;
   website?: string | null;
   isActive?: boolean;
-  businessType?: 'COFFEE' | 'FOOD';
+  businessType?: 'BEVERAGES' | 'FOOD';
   // Reward settings
   stampsRequired?: number;
   rewardDescription?: string;
@@ -229,7 +229,7 @@ export const defaultCafeProfile: CafeProfile = {
   onboardingStep: 1,
   termsAccepted: false,
   antifraudAccepted: false,
-  businessType: 'COFFEE',
+  businessType: 'BEVERAGES',
   // Reward settings defaults
   stampsRequired: 10,
   rewardDescription: 'Free Coffee',
